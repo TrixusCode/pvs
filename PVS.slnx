@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/PVS.Api/PVS.Api.csproj" />
+  </Folder>
+  <Folder Name="/backend/tests/">
+    <Project Path="backend/PVS.IntegrationTests/PVS.IntegrationTests.csproj" />
+    <Project Path="backend/PVS.UnitTests/PVS.UnitTests.csproj" />
+  </Folder>
+</Solution>
