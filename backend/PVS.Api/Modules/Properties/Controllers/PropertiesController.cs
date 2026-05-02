@@ -9,7 +9,7 @@ namespace PVS.Api.Modules.Properties.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class PropertiesController(IPropertiesService propertiesService) : ControllerBase
 {
     [HttpGet]

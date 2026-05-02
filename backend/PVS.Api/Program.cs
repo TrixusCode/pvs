@@ -53,7 +53,7 @@ var secret = jwtSettings["Secret"];
 if (string.IsNullOrWhiteSpace(secret))
     throw new Exception("JwtSettings:Secret is missing from configuration");
 var key = Encoding.UTF8.GetBytes(secret);
-Console.WriteLine("VALIDATION SECRET: " + builder.Configuration["JwtSettings:Secret"]);
+
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JwtSettings"));
 builder.Services
@@ -70,8 +70,7 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ValidateIssuer = false,
             ValidateAudience = false,
-            ValidateLifetime = true,
-            //ClockSkew = TimeSpan.Zero
+            ValidateLifetime = true
         };
         options.Events = new JwtBearerEvents
         {

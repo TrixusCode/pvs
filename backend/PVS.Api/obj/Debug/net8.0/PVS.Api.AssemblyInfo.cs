@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PVS.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9dd3203690890fd742e264482fb94295f4170b8d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a9729df83929ef95ebdf212a5547ecd6270d1bdf")]
 [assembly: System.Reflection.AssemblyProductAttribute("PVS.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PVS.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
