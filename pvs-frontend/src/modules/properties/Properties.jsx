@@ -62,7 +62,7 @@ export default function Properties() {
           properties.map((property) => (
             <div key={property.id} className="property-card">
               <h3>{property.title || property.name}</h3>
-              <p className="address">{property.address}</p>
+             
               <p className="description">{property.description}</p>
               
               <div className="property-details">

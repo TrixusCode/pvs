@@ -19,8 +19,8 @@ export default function Login() {
       const response = await authAPI.login(email, password);
       
       // Store the token
-      localStorage.setItem('authToken', response.data.token);
-      
+      localStorage.setItem('authToken', response.data.data);
+      console.log(localStorage.getItem("authToken"));
       // Redirect to dashboard
       navigate('/properties');
     } catch (err) {

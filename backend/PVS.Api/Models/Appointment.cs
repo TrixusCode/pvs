@@ -1,3 +1,5 @@
+using PVS.Api.Modules.Appointments.Enums;
+
 namespace PVS.Api.Models;
 
 public class Appointment
@@ -7,8 +9,8 @@ public class Appointment
     public int ClientId { get; set; }
     public DateTime AppointmentDate { get; set; }
     public string Time { get; set; } = string.Empty; // e.g., "10:00 AM"
-    public string Type { get; set; } = "Showing"; // Showing, Inspection, Closing
-    public string Status { get; set; } = "Scheduled"; // Scheduled, Completed, Cancelled, No-Show
+    public AppointmentType? Type { get; set; }  // Showing, Inspection, Closing
+    public AppointmentStatus? Status { get; set; }  // Scheduled, Completed, Cancelled, No-Show
     public string Notes { get; set; } = string.Empty;
     public decimal? DurationMinutes { get; set; }
     public string? FeedbackFromClient { get; set; }

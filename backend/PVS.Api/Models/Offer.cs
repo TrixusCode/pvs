@@ -1,3 +1,5 @@
+using PVS.Api.Modules.Offers.Enums;
+
 namespace PVS.Api.Models;
 
 public class Offer
@@ -6,13 +8,13 @@ public class Offer
     public int PropertyId { get; set; }
     public int ClientId { get; set; }
     public decimal OfferedPrice { get; set; }
-    public string Status { get; set; } = "Pending"; // Pending, Accepted, Rejected, Withdrawn, Expired
+    public OfferStatus? Status { get; set; } = OfferStatus.Pending; 
     public DateTime OfferDate { get; set; }
     public DateTime? ExpirationDate { get; set; }
-    public string OfferType { get; set; } = "Full Price"; // Full Price, Contingent, As-Is
+    public OfferType OfferType { get; set; } = OfferType.FullPrice; 
     public decimal? DownPaymentPercent { get; set; }
     public int? ClosingDaysRequested { get; set; }
-    public string? Contingencies { get; set; } // Home inspection, appraisal, financing, etc.
+    public Contingencies? Contingencies { get; set; } 
     public string? AgentNotes { get; set; }
     public int UserId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
