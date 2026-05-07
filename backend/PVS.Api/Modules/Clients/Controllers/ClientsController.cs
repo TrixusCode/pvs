@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PVS.Api.Common;
-using PVS.Api.Models;
 using PVS.Api.Modules.Clients.Dtos;
+using PVS.Api.Modules.Clients.Mappers;
 using PVS.Api.Modules.Clients.Services;
 
 namespace PVS.Api.Modules.Clients.Controllers;
@@ -28,10 +28,10 @@ public class ClientsController : ControllerBase
 
         var clients = await _clientService.GetAllAsync(userId.Value);
 
-        return Ok(new ApiResponse<List<Client>>
+        return Ok(new ApiResponse<List<ClientDto>>
         {
             Success = true,
-            Data = clients.ToList()
+            Data = clients.Select(client => client.ToDto()).ToList()
         });
     }
 
@@ -46,10 +46,10 @@ public class ClientsController : ControllerBase
         if (client == null)
             return NotFound(new ApiResponse { Success = false, Message = "Client not found" });
 
-        return Ok(new ApiResponse<Client>
+        return Ok(new ApiResponse<ClientDto>
         {
             Success = true,
-            Data = client
+            Data = client.ToDto()
         });
     }
 
@@ -65,10 +65,10 @@ public class ClientsController : ControllerBase
 
         var client = await _clientService.CreateAsync(request, userId.Value);
 
-        return CreatedAtAction(nameof(GetById), new { id = client.Id }, new ApiResponse<Client>
+        return CreatedAtAction(nameof(GetById), new { id = client.Id }, new ApiResponse<ClientDto>
         {
             Success = true,
-            Data = client
+            Data = client.ToDto()
         });
     }
 
@@ -86,10 +86,10 @@ public class ClientsController : ControllerBase
         if (client == null)
             return NotFound(new ApiResponse { Success = false, Message = "Client not found or access denied" });
 
-        return Ok(new ApiResponse<Client>
+        return Ok(new ApiResponse<ClientDto>
         {
             Success = true,
-            Data = client
+            Data = client.ToDto()
         });
     }
 
@@ -117,7 +117,6 @@ public class ClientsController : ControllerBase
         return int.TryParse(userIdClaim, out var userId) ? userId : null;
     }
 }
-
 
 
 

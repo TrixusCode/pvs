@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authAPI } from '../../api/Client';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import AuthService from './AuthService';
 import './Login.css';
 
 export default function Login() {
@@ -16,13 +16,27 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await authAPI.login(email, password);
+      const response = await AuthService.login(email, password);
       
       // Store the token
-      localStorage.setItem('authToken', response.data.data);
-      console.log(localStorage.getItem("authToken"));
+      localStorage.setItem('authToken', response.data);
+      
+      // Fetch and store user info
+      try {
+        const userInfo = await AuthService.getCurrentUser();
+        if (userInfo.data) {
+          localStorage.setItem('userRole', userInfo.data.role || 'Agent');
+          localStorage.setItem('userId', userInfo.data.id);
+          localStorage.setItem('userName', `${userInfo.data.firstName} ${userInfo.data.lastName}`);
+        }
+      } catch (userErr) {
+        console.warn('Could not fetch user info, using default role');
+        localStorage.setItem('userRole', 'Agent');
+      }
+
+      console.log('Token stored successfully');
       // Redirect to dashboard
-      navigate('/properties');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
@@ -38,8 +52,9 @@ export default function Login() {
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email:</label>
+            <label htmlFor="email">Email:</label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -49,8 +64,9 @@ export default function Login() {
           </div>
           
           <div className="form-group">
-            <label>Password:</label>
+            <label htmlFor="password">Password:</label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -63,6 +79,10 @@ export default function Login() {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <div className="register-link">
+          <p>Don't have an account? <Link to="/register">Register here</Link></p>
+        </div>
       </div>
     </div>
   );

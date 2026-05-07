@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PVS.Api.Common;
-using PVS.Api.Models;
 using PVS.Api.Modules.Properties.Dtos;
+using PVS.Api.Modules.Properties.Mappers;
 using PVS.Api.Modules.Properties.Services;
 
 namespace PVS.Api.Modules.Properties.Controllers;
@@ -21,9 +21,9 @@ public class PropertiesController(IPropertiesService propertiesService) : Contro
         var skip = (page - 1) * pageSize;
         var items = properties.ToList();
 
-        return Ok(new PaginatedResponse<Property>
+        return Ok(new PaginatedResponse<PropertyDto>
         {
-            Data = items,
+            Data = items.Select(property => property.ToDto()).ToList(),
             CurrentPage = page,
             PageSize = pageSize,
             TotalCount = total
@@ -37,10 +37,10 @@ public class PropertiesController(IPropertiesService propertiesService) : Contro
         if (property == null)
             return NotFound(new ApiResponse { Success = false, Message = "Property not found" });
 
-        return Ok(new ApiResponse<Property>
+        return Ok(new ApiResponse<PropertyDto>
         {
             Success = true,
-            Data = property
+            Data = property.ToDto()
         });
     }
 
@@ -56,10 +56,10 @@ public class PropertiesController(IPropertiesService propertiesService) : Contro
 
         var property = await propertiesService.CreateAsync(request, userId.Value);
 
-        return CreatedAtAction(nameof(GetById), new { id = property.Id }, new ApiResponse<Property>
+        return CreatedAtAction(nameof(GetById), new { id = property.Id }, new ApiResponse<PropertyDto>
         {
             Success = true,
-            Data = property
+            Data = property.ToDto()
         });
     }
 
@@ -77,10 +77,10 @@ public class PropertiesController(IPropertiesService propertiesService) : Contro
         if (property == null)
             return NotFound(new ApiResponse { Success = false, Message = "Property not found or access denied" });
 
-        return Ok(new ApiResponse<Property>
+        return Ok(new ApiResponse<PropertyDto>
         {
             Success = true,
-            Data = property
+            Data = property.ToDto()
         });
     }
 

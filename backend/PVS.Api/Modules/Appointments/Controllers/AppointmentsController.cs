@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PVS.Api.Common;
-using PVS.Api.Models;
 using PVS.Api.Modules.Appointments.Dtos;
+using PVS.Api.Modules.Appointments.Mappers;
 using PVS.Api.Modules.Appointments.Services;
 using System.Security.Claims;
 
@@ -11,15 +11,8 @@ namespace PVS.Api.Modules.Appointments.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AppointmentsController : ControllerBase
+public class AppointmentsController(IAppointmentService appointmentService) : ControllerBase
 {
-    private readonly IAppointmentService _appointmentService;
-
-    public AppointmentsController(IAppointmentService appointmentService)
-    {
-        _appointmentService = appointmentService;
-    }
-
     private int GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -30,15 +23,15 @@ public class AppointmentsController : ControllerBase
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         var userId = GetCurrentUserId();
-        var appointments = await _appointmentService.GetAllByUserAsync(userId);
+        var appointments = await appointmentService.GetAllByUserAsync(userId);
 
         var skip = (page - 1) * pageSize;
         var total = appointments.Count();
         var items = appointments.Skip(skip).Take(pageSize).ToList();
 
-        return Ok(new PaginatedResponse<Appointment>
+        return Ok(new PaginatedResponse<AppointmentDto>
         {
-            Data = items,
+            Data = items.Select(appointment => appointment.ToDto()).ToList(),
             CurrentPage = page,
             PageSize = pageSize,
             TotalCount = total
@@ -48,14 +41,14 @@ public class AppointmentsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var appointment = await _appointmentService.GetByIdAsync(id);
+        var appointment = await appointmentService.GetByIdAsync(id);
         if (appointment == null)
             return NotFound(new ApiResponse { Success = false, Message = "Appointment not found" });
 
-        return Ok(new ApiResponse<Appointment>
+        return Ok(new ApiResponse<AppointmentDto>
         {
             Success = true,
-            Data = appointment
+            Data = appointment.ToDto()
         });
     }
 
@@ -66,9 +59,13 @@ public class AppointmentsController : ControllerBase
             return BadRequest(ModelState);
 
         var userId = GetCurrentUserId();
-        var appointment = await _appointmentService.CreateAsync(request, userId);
+        var appointment = await appointmentService.CreateAsync(request, userId);
 
-        return CreatedAtAction(nameof(GetById), new { id = appointment.Id }, appointment);
+        return CreatedAtAction(nameof(GetById), new { id = appointment.Id }, new ApiResponse<AppointmentDto>
+        {
+            Success = true,
+            Data = appointment.ToDto()
+        });
     }
 
     [HttpPut("{id}")]
@@ -78,16 +75,16 @@ public class AppointmentsController : ControllerBase
             return BadRequest(ModelState);
 
         var userId = GetCurrentUserId();
-        var appointment = await _appointmentService.UpdateAsync(id, request, userId);
+        var appointment = await appointmentService.UpdateAsync(id, request, userId);
 
         if (appointment == null)
             return NotFound(new ApiResponse { Success = false, Message = "Appointment not found" });
 
-        return Ok(new ApiResponse<Appointment>
+        return Ok(new ApiResponse<AppointmentDto>
         {
             Success = true,
             Message = "Appointment updated successfully",
-            Data = appointment
+            Data = appointment.ToDto()
         });
     }
 
@@ -95,7 +92,7 @@ public class AppointmentsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var userId = GetCurrentUserId();
-        var result = await _appointmentService.DeleteAsync(id, userId);
+        var result = await appointmentService.DeleteAsync(id, userId);
 
         if (!result)
             return NotFound(new ApiResponse { Success = false, Message = "Appointment not found" });
@@ -110,40 +107,39 @@ public class AppointmentsController : ControllerBase
     [HttpGet("property/{propertyId}")]
     public async Task<IActionResult> GetByPropertyId(int propertyId)
     {
-        var appointments = await _appointmentService.GetByPropertyAsync(propertyId);
+        var appointments = await appointmentService.GetByPropertyAsync(propertyId);
 
-        return Ok(new ApiResponse<List<Appointment>>
+        return Ok(new ApiResponse<List<AppointmentDto>>
         {
             Success = true,
-            Data = appointments.ToList()
+            Data = appointments.Select(appointment => appointment.ToDto()).ToList()
         });
     }
 
     [HttpGet("client/{clientId}")]
     public async Task<IActionResult> GetByClientId(int clientId)
     {
-        var appointments = await _appointmentService.GetByClientAsync(clientId);
+        var appointments = await appointmentService.GetByClientAsync(clientId);
 
-        return Ok(new ApiResponse<List<Appointment>>
+        return Ok(new ApiResponse<List<AppointmentDto>>
         {
             Success = true,
-            Data = appointments.ToList()
+            Data = appointments.Select(appointment => appointment.ToDto()).ToList()
         });
     }
 
     [HttpGet("by-date")]
     public async Task<IActionResult> GetByDateRange([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
     {
-        var appointments = await _appointmentService.GetByDateRangeAsync(startDate, endDate);
+        var appointments = await appointmentService.GetByDateRangeAsync(startDate, endDate);
 
-        return Ok(new ApiResponse<List<Appointment>>
+        return Ok(new ApiResponse<List<AppointmentDto>>
         {
             Success = true,
-            Data = appointments.ToList()
+            Data = appointments.Select(appointment => appointment.ToDto()).ToList()
         });
     }
 }
-
 
 
 

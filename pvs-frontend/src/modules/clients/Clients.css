@@ -1,0 +1,294 @@
+.clients-container {
+  padding: 2.5rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.clients-container h1 {
+  color: var(--color-dark);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.error-message {
+  background-color: rgba(255, 88, 88, 0.14);
+  color: #8b2222;
+  padding: 1rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid rgba(255, 88, 88, 0.7);
+}
+
+.success-message {
+  background-color: rgba(88, 255, 88, 0.14);
+  color: #228b22;
+  padding: 1rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid rgba(88, 255, 88, 0.7);
+}
+
+.clients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.75rem;
+  margin-bottom: 2rem;
+}
+
+.client-card {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(69, 80, 59, 0.08);
+  box-shadow: 0 24px 55px rgba(69, 80, 59, 0.08);
+  padding: 1.7rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.client-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 70px rgba(69, 80, 59, 0.12);
+}
+
+.client-card h3 {
+  color: var(--color-dark);
+  margin-bottom: 0.5rem;
+}
+
+.client-card .email {
+  color: var(--color-mid);
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.client-card .phone {
+  color: var(--color-mid);
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.client-card .type {
+  color: var(--color-accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.client-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid rgba(69, 80, 59, 0.08);
+  border-bottom: 1px solid rgba(69, 80, 59, 0.08);
+}
+
+.client-details .status {
+  color: var(--color-mid);
+  font-size: 0.95rem;
+}
+
+.client-details .created-date {
+  color: var(--color-mid);
+  font-size: 0.9rem;
+}
+
+.client-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.client-actions button {
+  flex: 1;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.client-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.edit-btn {
+  background-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.edit-btn:hover {
+  background-color: #6e88ff;
+}
+
+.delete-btn {
+  background-color: rgba(69, 80, 59, 0.08);
+  color: var(--color-dark);
+}
+
+.delete-btn:hover {
+  background-color: rgba(69, 80, 59, 0.14);
+}
+
+.add-client-btn {
+  background: var(--color-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 14px 28px rgba(127, 150, 255, 0.18);
+  margin-bottom: 2rem;
+}
+
+.add-client-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(127, 150, 255, 0.21);
+}
+
+.client-form {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(69, 80, 59, 0.08);
+  box-shadow: 0 24px 55px rgba(69, 80, 59, 0.08);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.client-form h2 {
+  color: var(--color-dark);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-mid);
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(69, 80, 59, 0.16);
+  border-radius: 14px;
+  background: #fbfbf8;
+  color: var(--color-dark);
+  font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: rgba(127, 150, 255, 0.55);
+  box-shadow: 0 0 0 0.2rem rgba(127, 150, 255, 0.2);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.form-actions button {
+  padding: 0.95rem 2rem;
+  border: none;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.save-btn {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.save-btn:hover {
+  transform: translateY(-1px);
+}
+
+.cancel-btn {
+  background: rgba(69, 80, 59, 0.08);
+  color: var(--color-dark);
+}
+
+.cancel-btn:hover {
+  transform: translateY(-1px);
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.pagination button {
+  padding: 0.75rem 1.2rem;
+  border: 1px solid rgba(69, 80, 59, 0.14);
+  background-color: #ffffff;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-dark);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: rgba(127, 150, 255, 0.1);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  color: var(--color-mid);
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .clients-grid {
+    grid-template-columns: 1fr;
+  }
+}

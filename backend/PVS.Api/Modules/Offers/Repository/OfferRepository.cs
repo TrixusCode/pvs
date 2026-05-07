@@ -5,23 +5,9 @@ using PVS.Api.Modules.Offers.Enums;
 
 namespace PVS.Api.Modules.Offers.Repository;
 
-public interface IOfferRepository : IGenericRepository<Offer>
+public class OfferRepository(AppDbContext context) : GenericRepository<Offer>(context), IOfferRepository
 {
-    Task<IEnumerable<Offer>> GetByPropertyIdAsync(int propertyId);
-    Task<IEnumerable<Offer>> GetByClientIdAsync(int clientId);
-    Task<IEnumerable<Offer>> GetByUserIdAsync(int userId);
-    Task<IEnumerable<Offer>> GetByStatusAsync(OfferStatus status);
-    Task<IEnumerable<Offer>> GetExpiredAsync();
-}
-
-public class OfferRepository : GenericRepository<Offer>, IOfferRepository
-{
-    private readonly AppDbContext _context;
-
-    public OfferRepository(AppDbContext context) : base(context)
-    {
-        _context = context;
-    }
+    private readonly AppDbContext _context = context;
 
     public async Task<IEnumerable<Offer>> GetByPropertyIdAsync(int propertyId)
     {

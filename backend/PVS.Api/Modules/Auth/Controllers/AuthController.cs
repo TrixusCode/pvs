@@ -9,6 +9,7 @@ using PVS.Api.Common;
 using PVS.Api.Models;
 using PVS.Api.Modules.Auth.Dtos;
 using PVS.Api.Modules.Auth.Services;
+using PVS.Api.Modules.Auth.Mappers;
 
 namespace PVS.Api.Modules.Auth.Controllers;
 
@@ -77,14 +78,7 @@ public class AuthController : ControllerBase
                 Data = new
                 {
                     token,
-                    user = new
-                    {
-                        user.Id,
-                        user.Email,
-                        user.FirstName,
-                        user.LastName,
-                        user.Role
-                    }
+                    user = user.ToDto()
                 }
             });
         }
@@ -106,18 +100,10 @@ public class AuthController : ControllerBase
         if (user == null)
             return NotFound(new ApiResponse { Success = false, Message = "User not found" });
 
-        return Ok(new ApiResponse<object>
+        return Ok(new ApiResponse<UserDto>
         {
             Success = true,
-            Data = new
-            {
-                user.Id,
-                user.Email,
-                user.FirstName,
-                user.LastName,
-                user.Role,
-                user.CreatedAt
-            }
+            Data = user.ToDto()
         });
     }
 

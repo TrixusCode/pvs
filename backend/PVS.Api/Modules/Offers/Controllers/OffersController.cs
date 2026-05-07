@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PVS.Api.Common;
-using PVS.Api.Models;
 using PVS.Api.Modules.Offers.Dtos;
+using PVS.Api.Modules.Offers.Mappers;
 using PVS.Api.Modules.Offers.Services;
 using PVS.Api.Modules.Offers.Enums;
 using System.Security.Claims;
@@ -37,9 +37,9 @@ public class OffersController : ControllerBase
         var total = offers.Count();
         var items = offers.Skip(skip).Take(pageSize).ToList();
 
-        return Ok(new PaginatedResponse<Offer>
+        return Ok(new PaginatedResponse<OfferDto>
         {
-            Data = items,
+            Data = items.Select(offer => offer.ToDto()).ToList(),
             CurrentPage = page,
             PageSize = pageSize,
             TotalCount = total
@@ -53,10 +53,10 @@ public class OffersController : ControllerBase
         if (offer == null)
             return NotFound(new ApiResponse { Success = false, Message = "Offer not found" });
 
-        return Ok(new ApiResponse<Offer>
+        return Ok(new ApiResponse<OfferDto>
         {
             Success = true,
-            Data = offer
+            Data = offer.ToDto()
         });
     }
 
@@ -69,7 +69,11 @@ public class OffersController : ControllerBase
         var userId = GetCurrentUserId();
         var offer = await _offerService.CreateAsync(request, userId);
 
-        return CreatedAtAction(nameof(GetById), new { id = offer.Id }, offer);
+        return CreatedAtAction(nameof(GetById), new { id = offer.Id }, new ApiResponse<OfferDto>
+        {
+            Success = true,
+            Data = offer.ToDto()
+        });
     }
 
     [HttpPut("{id}")]
@@ -84,11 +88,11 @@ public class OffersController : ControllerBase
         if (offer == null)
             return NotFound(new ApiResponse { Success = false, Message = "Offer not found" });
 
-        return Ok(new ApiResponse<Offer>
+        return Ok(new ApiResponse<OfferDto>
         {
             Success = true,
             Message = "Offer updated successfully",
-            Data = offer
+            Data = offer.ToDto()
         });
     }
 
@@ -113,10 +117,10 @@ public class OffersController : ControllerBase
     {
         var offers = await _offerService.GetByPropertyAsync(propertyId);
 
-        return Ok(new ApiResponse<List<Offer>>
+        return Ok(new ApiResponse<List<OfferDto>>
         {
             Success = true,
-            Data = offers.ToList()
+            Data = offers.Select(offer => offer.ToDto()).ToList()
         });
     }
 
@@ -125,10 +129,10 @@ public class OffersController : ControllerBase
     {
         var offers = await _offerService.GetByClientAsync(clientId);
 
-        return Ok(new ApiResponse<List<Offer>>
+        return Ok(new ApiResponse<List<OfferDto>>
         {
             Success = true,
-            Data = offers.ToList()
+            Data = offers.Select(offer => offer.ToDto()).ToList()
         });
     }
 
@@ -136,16 +140,16 @@ public class OffersController : ControllerBase
     public async Task<IActionResult> AcceptOffer(int id)
     {
         var userId = GetCurrentUserId();
-        var offer = await _offerService.UpdateAsync(id, new UpdateOfferRequest { Status = OfferStatus.Accepted }, userId);
+        var offer = await _offerService.UpdateAsync(id, new UpdateOfferRequest { Status = nameof(OfferStatus.Accepted)}, userId);
 
         if (offer == null)
             return NotFound(new ApiResponse { Success = false, Message = "Offer not found" });
 
-        return Ok(new ApiResponse<Offer>
+        return Ok(new ApiResponse<OfferDto>
         {
             Success = true,
             Message = "Offer accepted successfully",
-            Data = offer
+            Data = offer.ToDto()
         });
     }
 
@@ -153,16 +157,16 @@ public class OffersController : ControllerBase
     public async Task<IActionResult> RejectOffer(int id)
     {
         var userId = GetCurrentUserId();
-        var offer = await _offerService.UpdateAsync(id, new UpdateOfferRequest { Status = OfferStatus.Rejected }, userId);
+        var offer = await _offerService.UpdateAsync(id, new UpdateOfferRequest { Status = nameof(OfferStatus.Rejected) }, userId);
 
         if (offer == null)
             return NotFound(new ApiResponse { Success = false, Message = "Offer not found" });
 
-        return Ok(new ApiResponse<Offer>
+        return Ok(new ApiResponse<OfferDto>
         {
             Success = true,
             Message = "Offer rejected successfully",
-            Data = offer
+            Data = offer.ToDto()
         });
     }
 
@@ -170,17 +174,16 @@ public class OffersController : ControllerBase
     public async Task<IActionResult> WithdrawOffer(int id)
     {
         var userId = GetCurrentUserId();
-        var offer = await _offerService.UpdateAsync(id, new UpdateOfferRequest { Status = OfferStatus.Withdrawn }, userId);
+        var offer = await _offerService.UpdateAsync(id, new UpdateOfferRequest { Status = nameof(OfferStatus.Withdrawn) }, userId);
 
         if (offer == null)
             return NotFound(new ApiResponse { Success = false, Message = "Offer not found" });
 
-        return Ok(new ApiResponse<Offer>
+        return Ok(new ApiResponse<OfferDto>
         {
             Success = true,
             Message = "Offer withdrawn successfully",
-            Data = offer
+            Data = offer.ToDto()
         });
     }
 }
-

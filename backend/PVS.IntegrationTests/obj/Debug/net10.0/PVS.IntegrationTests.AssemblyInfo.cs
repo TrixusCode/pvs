@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PVS.IntegrationTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9dd3203690890fd742e264482fb94295f4170b8d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+54f8cf637637dd3bb8ae48d431c65a7604962ce2")]
 [assembly: System.Reflection.AssemblyProductAttribute("PVS.IntegrationTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PVS.IntegrationTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

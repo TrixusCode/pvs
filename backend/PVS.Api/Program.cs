@@ -28,7 +28,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // Add services
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddScoped<DbSeeder>();
 
 // Repositories
@@ -46,6 +50,7 @@ builder.Services.AddScoped<PVS.Api.Modules.Properties.Services.IPropertiesServic
 builder.Services.AddScoped<PVS.Api.Modules.Clients.Services.IClientService, PVS.Api.Modules.Clients.Services.ClientService>();
 builder.Services.AddScoped<PVS.Api.Modules.Appointments.Services.IAppointmentService, PVS.Api.Modules.Appointments.Services.AppointmentService>();
 builder.Services.AddScoped<PVS.Api.Modules.Offers.Services.IOfferService, PVS.Api.Modules.Offers.Services.OfferService>();
+builder.Services.AddScoped<PVS.Api.Modules.Dashboard.Services.IDashboardService, PVS.Api.Modules.Dashboard.Services.DashboardService>();
 
 // JWT Configuration
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

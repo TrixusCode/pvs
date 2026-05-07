@@ -5,20 +5,9 @@ using PVS.Api.Modules.Branches.Enums;
 
 namespace PVS.Api.Modules.Branches.Repository;
 
-public interface IBranchRepository : IGenericRepository<Branch>
+public class BranchRepository(AppDbContext context) : GenericRepository<Branch>(context), IBranchRepository
 {
-    Task<IEnumerable<Branch>> GetByStatusAsync(BranchStatus status);
-    Task<IEnumerable<Branch>> GetByManagerAsync(int managerId);
-}
-
-public class BranchRepository : GenericRepository<Branch>, IBranchRepository
-{
-    private readonly AppDbContext _context;
-
-    public BranchRepository(AppDbContext context) : base(context)
-    {
-        _context = context;
-    }
+    private readonly AppDbContext _context = context;
 
     public async Task<IEnumerable<Branch>> GetByStatusAsync(BranchStatus status)
     {

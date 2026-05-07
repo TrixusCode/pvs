@@ -8,7 +8,7 @@ public class Offer
     public int PropertyId { get; set; }
     public int ClientId { get; set; }
     public decimal OfferedPrice { get; set; }
-    public OfferStatus? Status { get; set; } = OfferStatus.Pending; 
+    public OfferStatus Status { get; set; } = OfferStatus.Pending; 
     public DateTime OfferDate { get; set; }
     public DateTime? ExpirationDate { get; set; }
     public OfferType OfferType { get; set; } = OfferType.FullPrice; 

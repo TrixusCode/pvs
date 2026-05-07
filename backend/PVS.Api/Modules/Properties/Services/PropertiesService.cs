@@ -1,6 +1,7 @@
 using PVS.Api.Data;
 using PVS.Api.Models;
 using PVS.Api.Modules.Properties.Dtos;
+using PVS.Api.Modules.Properties.Mappers;
 
 namespace PVS.Api.Modules.Properties.Services;
 
@@ -23,17 +24,7 @@ public class PropertiesService(AppDbContext context) : IPropertiesService
 
     public async Task<Property> CreateAsync(CreatePropertyRequest request, int userId)
     {
-        var property = new Property
-        {
-            Title = request.Title,
-            Description = request.Description,
-            Price = request.Price,
-            Bedrooms = request.Bedrooms,
-            Bathrooms = request.Bathrooms,
-            SquareFeet = request.SquareFeet,
-            UserId = userId,
-            CreatedAt = DateTime.UtcNow
-        };
+        var property = request.ToEntity(userId);
 
         context.Properties.Add(property);
         await context.SaveChangesAsync();
@@ -47,14 +38,7 @@ public class PropertiesService(AppDbContext context) : IPropertiesService
         if (property == null || property.UserId != userId)
             return null;
 
-        if (request.Title != null) property.Title = request.Title;
-        if (request.Description != null) property.Description = request.Description;
-        if (request.Price.HasValue) property.Price = request.Price.Value;
-        if (request.Bedrooms.HasValue) property.Bedrooms = request.Bedrooms.Value;
-        if (request.Bathrooms.HasValue) property.Bathrooms = request.Bathrooms.Value;
-        if (request.SquareFeet.HasValue) property.SquareFeet = request.SquareFeet.Value;
-
-        property.UpdatedAt = DateTime.UtcNow;
+        request.ApplyTo(property);
 
         await context.SaveChangesAsync();
         return property;

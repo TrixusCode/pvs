@@ -1,7 +1,7 @@
 using PVS.Api.Data;
 using PVS.Api.Models;
 using PVS.Api.Modules.Clients.Dtos;
-using PVS.Api.Modules.Clients.Enums;
+using PVS.Api.Modules.Clients.Mappers;
 
 namespace PVS.Api.Modules.Clients.Services;
 
@@ -23,18 +23,7 @@ public class ClientService(AppDbContext context) : IClientService
 
     public async Task<Client> CreateAsync(CreateClientRequest request, int userId)
     {
-        var client = new Client
-        {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Email = request.Email,
-            Phone = request.Phone,
-            Address = request.Address,
-            ClientType = request.ClientType ?? ClientType.Buyer,
-            Status = request.Status ?? ClientStatus.Active,
-            UserId = userId,
-            CreatedAt = DateTime.UtcNow
-        };
+        var client = request.ToEntity(userId);
 
         context.Clients.Add(client);
         await context.SaveChangesAsync();
@@ -48,15 +37,7 @@ public class ClientService(AppDbContext context) : IClientService
         if (client == null)
             return null;
 
-        if (request.FirstName != null) client.FirstName = request.FirstName;
-        if (request.LastName != null) client.LastName = request.LastName;
-        if (request.Email != null) client.Email = request.Email;
-        if (request.Phone != null) client.Phone = request.Phone;
-        if (request.Address != null) client.Address = request.Address;
-        if (request.ClientType != null) client.ClientType = request.ClientType;
-        if (request.Status != null) client.Status = request.Status;
-
-        client.UpdatedAt = DateTime.UtcNow;
+        request.ApplyTo(client);
 
         await context.SaveChangesAsync();
         return client;

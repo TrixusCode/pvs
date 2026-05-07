@@ -2,6 +2,7 @@ using PVS.Api.Models;
 using PVS.Api.Modules.Offers.Dtos;
 using PVS.Api.Modules.Offers.Repository;
 using PVS.Api.Modules.Offers.Enums;
+using PVS.Api.Modules.Offers.Mappers;
 
 namespace PVS.Api.Modules.Offers.Services;
 
@@ -41,22 +42,7 @@ public class OfferService : IOfferService
 
     public async Task<Offer> CreateAsync(CreateOfferRequest request, int userId)
     {
-        var offer = new Offer
-        {
-            PropertyId = request.PropertyId,
-            ClientId = request.ClientId,
-            OfferedPrice = request.OfferedPrice,
-            Status = request.Status ?? OfferStatus.Pending,
-            OfferDate = DateTime.UtcNow,
-            ExpirationDate = request.ExpirationDate,
-            OfferType = request.OfferType ?? OfferType.FullPrice,
-            DownPaymentPercent = request.DownPaymentPercent,
-            ClosingDaysRequested = request.ClosingDaysRequested,
-            Contingencies = request.Contingencies,
-            AgentNotes = request.AgentNotes,
-            UserId = userId,
-            CreatedAt = DateTime.UtcNow
-        };
+        var offer = request.ToEntity(userId);
 
         await _offerRepository.AddAsync(offer);
         return offer;
@@ -68,14 +54,7 @@ public class OfferService : IOfferService
         if (offer == null)
             return null;
 
-        if (request.OfferedPrice > 0) offer.OfferedPrice = request.OfferedPrice;
-        if (request.Status.HasValue) offer.Status = request.Status;
-        if (request.ExpirationDate.HasValue) offer.ExpirationDate = request.ExpirationDate;
-        if (request.DownPaymentPercent.HasValue) offer.DownPaymentPercent = request.DownPaymentPercent;
-        if (request.ClosingDaysRequested.HasValue) offer.ClosingDaysRequested = request.ClosingDaysRequested;
-        if (request.Contingencies.HasValue) offer.Contingencies = request.Contingencies;
-        if (!string.IsNullOrEmpty(request.AgentNotes)) offer.AgentNotes = request.AgentNotes;
-        offer.UpdatedAt = DateTime.UtcNow;
+        request.ApplyTo(offer);
 
         await _offerRepository.UpdateAsync(offer);
         return offer;

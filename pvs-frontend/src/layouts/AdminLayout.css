@@ -1,0 +1,286 @@
+/* Admin Layout Styles */
+:root {
+  --sb-admin-primary: #007bff;
+  --sb-admin-dark: #2e3338;
+  --sb-admin-light: #f8f9fa;
+  --sb-admin-border: #dee2e6;
+}
+
+.admin-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--sb-admin-light);
+}
+
+/* Navigation Bar */
+.admin-navbar {
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  padding: 1rem 0;
+}
+
+.admin-navbar .navbar-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.sidebar-toggle {
+  font-size: 1.25rem;
+  padding: 0.5rem !important;
+}
+
+/* Container */
+.admin-container {
+  display: flex;
+  flex: 1;
+  margin-top: 0.5rem;
+}
+
+/* Sidebar */
+.admin-sidebar {
+  width: 225px;
+  background-color: #fff;
+  border-right: 1px solid var(--sb-admin-border);
+  padding: 2rem 0;
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+  transition: all 0.3s ease;
+  position: sticky;
+  top: 70px;
+}
+
+.admin-sidebar.hide {
+  margin-left: -225px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  color: #2e3338;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.sidebar-item:hover {
+  background-color: var(--sb-admin-light);
+  color: var(--sb-admin-primary);
+  border-left-color: var(--sb-admin-primary);
+}
+
+.sidebar-item.active {
+  background-color: var(--sb-admin-light);
+  color: var(--sb-admin-primary);
+  border-left: 4px solid var(--sb-admin-primary);
+  font-weight: 600;
+}
+
+.sidebar-icon {
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  font-size: 1.1rem;
+}
+
+.sidebar-label {
+  flex: 1;
+}
+
+/* Main Content */
+.admin-main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.admin-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-container {
+    position: relative;
+  }
+
+  .admin-sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: calc(100vh - 70px);
+    z-index: 1000;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .admin-sidebar.hide {
+    display: none;
+  }
+
+  .admin-main {
+    width: 100%;
+  }
+
+  .admin-navbar {
+    z-index: 900;
+  }
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2e3338;
+  margin: 0;
+}
+
+.page-header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Card Styles */
+.admin-card {
+  background: white;
+  border: 1px solid var(--sb-admin-border);
+  border-radius: 0.35rem;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  margin-bottom: 2rem;
+}
+
+.admin-card-header {
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--sb-admin-border);
+  border-radius: 0.35rem 0.35rem 0 0;
+}
+
+.admin-card-body {
+  padding: 1.5rem;
+}
+
+/* Data Table */
+.admin-table {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.admin-table thead {
+  background-color: #f8f9fa;
+}
+
+.admin-table th {
+  font-weight: 600;
+  color: #2e3338;
+  padding: 1rem;
+  border: 1px solid var(--sb-admin-border);
+  font-size: 0.9rem;
+}
+
+.admin-table td {
+  padding: 1rem;
+  border: 1px solid var(--sb-admin-border);
+}
+
+.admin-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Stat Cards */
+.stat-card {
+  background: white;
+  border-left: 4px solid var(--sb-admin-primary);
+  padding: 1.5rem;
+  border-radius: 0.35rem;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  margin-bottom: 2rem;
+}
+
+.stat-card h6 {
+  color: #adb5bd;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.stat-card-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2e3338;
+  margin: 0.5rem 0 0 0;
+}
+
+/* Button Styles */
+.btn-action {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  margin: 0.25rem;
+}
+
+.btn-sm-icon {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* Loading */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #adb5bd;
+}
+
+.empty-state svg {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Scrollbar Styling */
+.admin-sidebar::-webkit-scrollbar,
+.admin-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track,
+.admin-main::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb,
+.admin-main::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover,
+.admin-main::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
