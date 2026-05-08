@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API base URL - change based on environment
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5019/api';
 
 // Create axios instance
 const apiClient = axios.create({
@@ -73,6 +73,23 @@ class PropertiesService {
   async update(id, propertyData) {
     try {
       const response = await apiClient.put(`/properties/${id}`, propertyData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  // Upload or replace a property image
+  async uploadImage(id, imageFile) {
+    try {
+      const formData = new FormData();
+      formData.append('file', imageFile);
+
+      const response = await apiClient.post(`/properties/${id}/upload-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

@@ -21,21 +21,8 @@ export default function Login() {
       // Store the token
       localStorage.setItem('authToken', response.data);
       
-      // Fetch and store user info
-      try {
-        const userInfo = await AuthService.getCurrentUser();
-        if (userInfo.data) {
-          localStorage.setItem('userRole', userInfo.data.role || 'Agent');
-          localStorage.setItem('userId', userInfo.data.id);
-          localStorage.setItem('userName', `${userInfo.data.firstName} ${userInfo.data.lastName}`);
-        }
-      } catch (userErr) {
-        console.warn('Could not fetch user info, using default role');
-        localStorage.setItem('userRole', 'Agent');
-      }
-
       console.log('Token stored successfully');
-      // Redirect to dashboard
+      // Redirect to dashboard - role will be extracted from JWT token
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

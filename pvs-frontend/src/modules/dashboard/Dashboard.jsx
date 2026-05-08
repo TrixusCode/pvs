@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Alert, ListGroup } from 'react-bootstrap';
-import { FaHome, FaUsers, FaCalendar, FaHandshake, FaBell, FaPlus, FaEye, FaCog } from 'react-icons/fa';
+import { FaHome, FaUsers, FaCalendar, FaHandshake, FaBell, FaPlus, FaEye, FaCog, FaUserTie } from 'react-icons/fa';
+import { useUserRole, useUserInfo } from '../../shared/RoleGuard';
 import DashboardService from './DashboardService';
 import './Dashboard.css';
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
   const [stats, setStats] = useState({});
   const [recentActivities, setRecentActivities] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const userRole = useUserRole();
+  const userInfo = useUserInfo();
 
   useEffect(() => {
     fetchDashboardData();
@@ -23,14 +25,12 @@ export default function Dashboard() {
     setError('');
 
     try {
-      const [userRes, statsRes, activitiesRes, notificationsRes] = await Promise.all([
-        DashboardService.getCurrentUser(),
+      const [statsRes, activitiesRes, notificationsRes] = await Promise.all([
         DashboardService.getStatistics(),
         DashboardService.getRecentActivities(),
         DashboardService.getNotifications()
       ]);
 
-      setUser(userRes);
       setStats(statsRes);
       setRecentActivities(activitiesRes.data || []);
       setNotifications(notificationsRes.data || []);
@@ -97,7 +97,7 @@ export default function Dashboard() {
       <div className="page-header d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1>Dashboard</h1>
-          <p className="text-muted mb-0">Welcome back, {user?.firstName}!</p>
+          <p className="text-muted mb-0">Welcome back, {userInfo?.name || 'User'}!</p>
         </div>
         <Button variant="outline-secondary" onClick={handleLogout}>
           Logout
@@ -131,6 +131,19 @@ export default function Dashboard() {
             </Card.Body>
           </Card>
         </Col>
+        {(userRole === 'Admin' || userRole === 'Manager') && (
+          <Col lg={3} md={6} className="mb-4">
+            <Card className="stat-card h-100">
+              <Card.Body className="text-center">
+                <div className="stat-icon mb-3">
+                  <FaUserTie size={32} />
+                </div>
+                <h2 className="stat-number">{stats.totalEmployees || 0}</h2>
+                <p className="stat-label mb-0">Total Employees</p>
+              </Card.Body>
+            </Card>
+          </Col>
+        )}
         <Col lg={3} md={6} className="mb-4">
           <Card className="stat-card h-100">
             <Card.Body className="text-center">
@@ -164,9 +177,9 @@ export default function Dashboard() {
             </Card.Header>
             <Card.Body>
               <div className="profile-details">
-                <p className="mb-2"><strong>Name:</strong> {user?.firstName} {user?.lastName}</p>
-                <p className="mb-2"><strong>Email:</strong> {user?.email}</p>
-                <p className="mb-0"><strong>Role:</strong> <Badge bg="primary">{user?.role}</Badge></p>
+                <p className="mb-2"><strong>Name:</strong> {userInfo?.firstName} {userInfo?.lastName}</p>
+                <p className="mb-2"><strong>Email:</strong> {userInfo?.email}</p>
+                <p className="mb-0"><strong>Role:</strong> <Badge bg="primary">{userRole}</Badge></p>
               </div>
             </Card.Body>
           </Card>
@@ -177,38 +190,66 @@ export default function Dashboard() {
             </Card.Header>
             <Card.Body>
               <div className="d-grid gap-2">
-                <Button
-                  variant="primary"
-                  onClick={() => navigate('/properties')}
-                  className="d-flex align-items-center justify-content-start"
-                >
-                  <FaPlus className="me-2" />
-                  Add Property
-                </Button>
-                <Button
-                  variant="outline-primary"
-                  onClick={() => navigate('/clients')}
-                  className="d-flex align-items-center justify-content-start"
-                >
-                  <FaUsers className="me-2" />
-                  Manage Clients
-                </Button>
-                <Button
-                  variant="outline-primary"
-                  onClick={() => navigate('/appointments')}
-                  className="d-flex align-items-center justify-content-start"
-                >
-                  <FaCalendar className="me-2" />
-                  Schedule Appointment
-                </Button>
-                <Button
-                  variant="outline-primary"
-                  onClick={() => navigate('/offers')}
-                  className="d-flex align-items-center justify-content-start"
-                >
-                  <FaHandshake className="me-2" />
-                  Review Offers
-                </Button>
+                {(userRole === 'Admin' || userRole === 'Manager' || userRole === 'Agent') && (
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate('/properties')}
+                    className="d-flex align-items-center justify-content-start"
+                  >
+                    <FaPlus className="me-2" />
+                    Add Property
+                  </Button>
+                )}
+                {(userRole === 'Admin' || userRole === 'Manager' || userRole === 'Agent') && (
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => navigate('/clients')}
+                    className="d-flex align-items-center justify-content-start"
+                  >
+                    <FaUsers className="me-2" />
+                    Manage Clients
+                  </Button>
+                )}
+                {(userRole === 'Admin' || userRole === 'Manager' || userRole === 'Agent') && (
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => navigate('/appointments')}
+                    className="d-flex align-items-center justify-content-start"
+                  >
+                    <FaCalendar className="me-2" />
+                    Schedule Appointment
+                  </Button>
+                )}
+                {(userRole === 'Admin' || userRole === 'Manager' || userRole === 'Agent') && (
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => navigate('/offers')}
+                    className="d-flex align-items-center justify-content-start"
+                  >
+                    <FaHandshake className="me-2" />
+                    Review Offers
+                  </Button>
+                )}
+                {(userRole === 'Admin' || userRole === 'Manager') && (
+                  <Button
+                    variant="outline-success"
+                    onClick={() => navigate('/employees')}
+                    className="d-flex align-items-center justify-content-start"
+                  >
+                    <FaUserTie className="me-2" />
+                    Manage Employees
+                  </Button>
+                )}
+                {userRole === 'Admin' && (
+                  <Button
+                    variant="outline-warning"
+                    onClick={() => navigate('/branches')}
+                    className="d-flex align-items-center justify-content-start"
+                  >
+                    <FaCog className="me-2" />
+                    Manage Branches
+                  </Button>
+                )}
               </div>
             </Card.Body>
           </Card>

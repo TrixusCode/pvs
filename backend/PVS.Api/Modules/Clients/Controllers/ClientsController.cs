@@ -53,6 +53,33 @@ public class ClientsController : ControllerBase
         });
     }
 
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] string? q)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(new ApiResponse { Success = false, Message = "User not authenticated" });
+
+        var clients = await _clientService.GetAllAsync(userId.Value);
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var query = q.Trim();
+            clients = clients.Where(client =>
+                client.Id.ToString().Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                client.FirstName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                client.LastName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                client.Email.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                client.Phone.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return Ok(new ApiResponse<List<ClientDto>>
+        {
+            Success = true,
+            Data = clients.Select(client => client.ToDto()).ToList()
+        });
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateClientRequest request)
     {
@@ -117,6 +144,5 @@ public class ClientsController : ControllerBase
         return int.TryParse(userIdClaim, out var userId) ? userId : null;
     }
 }
-
 
 

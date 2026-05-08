@@ -17,6 +17,7 @@ export default function AdminLayout({ children, userRole = 'Agent' }) {
       { label: 'Appointments', icon: <FaCalendar />, path: '/appointments' },
       { label: 'Offers', icon: <FaHandshake />, path: '/offers' },
       { label: 'Branches', icon: <FaMapMarker />, path: '/branches' },
+      { label: 'Employees', icon: <FaUserCog />, path: '/employees' },
       { label: 'Users', icon: <FaUserCog />, path: '/users' },
     ];
 
@@ -27,7 +28,7 @@ export default function AdminLayout({ children, userRole = 'Agent' }) {
       );
     } else if (userRole === 'Agent') {
       return allItems.filter(item => 
-        !['Branches', 'Users'].includes(item.label)
+        !['Branches', 'Employees', 'Users'].includes(item.label)
       );
     } else if (userRole === 'Manager') {
       return allItems.filter(item => 

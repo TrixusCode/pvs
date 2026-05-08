@@ -17,6 +17,8 @@ public class PropertyDto
     public int Bedrooms { get; set; }
     public int Bathrooms { get; set; }
     public decimal SquareFeet { get; set; }
+    public string? ImagePath { get; set; }
+    public int BranchId { get; set; }
     public int UserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

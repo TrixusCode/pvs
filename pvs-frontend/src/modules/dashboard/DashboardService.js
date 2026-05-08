@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API base URL - change based on environment
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5019/api';
 
 // Create axios instance
 const apiClient = axios.create({
@@ -81,12 +81,9 @@ class DashboardService {
 
   // Get current user info
   async getCurrentUser() {
-    try {
-      const response = await apiClient.get('/auth/me');
-      return response.data.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    // Since we're using JWT token parsing, this method is deprecated
+    // User info is extracted from the token in the frontend
+    throw new Error('Use JWT token parsing instead');
   }
 
   // Logout

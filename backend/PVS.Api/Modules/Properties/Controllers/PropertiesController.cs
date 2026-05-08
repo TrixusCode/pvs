@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PVS.Api.Common;
 using PVS.Api.Modules.Properties.Dtos;
@@ -44,6 +45,30 @@ public class PropertiesController(IPropertiesService propertiesService) : Contro
         });
     }
 
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] string? q)
+    {
+        var properties = await propertiesService.GetAllAsync(1, 1000);
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var query = q.Trim();
+            properties = properties.Where(property =>
+                property.Id.ToString().Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                property.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                property.Description.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                property.Address.City.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                property.Address.State.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                property.Address.ZipCode.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return Ok(new ApiResponse<List<PropertyDto>>
+        {
+            Success = true,
+            Data = properties.Select(property => property.ToDto()).ToList()
+        });
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreatePropertyRequest request)
     {
@@ -73,9 +98,33 @@ public class PropertiesController(IPropertiesService propertiesService) : Contro
         if (userId == null)
             return Unauthorized(new ApiResponse { Success = false, Message = "User not authenticated" });
 
-        var property = await propertiesService.UpdateAsync(id, request, userId.Value);
+        try
+        {
+            var property = await propertiesService.UpdateAsync(id, request, userId.Value);
+            if (property == null)
+                return NotFound(new ApiResponse { Success = false, Message = "Property not found or access denied" });
+
+            return Ok(new ApiResponse<PropertyDto>
+            {
+                Success = true,
+                Data = property.ToDto()
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ApiResponse { Success = false, Message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id}/upload-image")]
+    public async Task<IActionResult> UploadImage(int id, IFormFile? file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new ApiResponse { Success = false, Message = "An image file is required" });
+
+        var property = await propertiesService.UploadImageAsync(id, file);
         if (property == null)
-            return NotFound(new ApiResponse { Success = false, Message = "Property not found or access denied" });
+            return NotFound(new ApiResponse { Success = false, Message = "Property not found" });
 
         return Ok(new ApiResponse<PropertyDto>
         {

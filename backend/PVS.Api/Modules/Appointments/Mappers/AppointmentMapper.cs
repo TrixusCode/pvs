@@ -45,6 +45,8 @@ public static class AppointmentMapper
 
     public static void ApplyTo(this UpdateAppointmentRequest request, Appointment appointment)
     {
+        if (request.PropertyId.HasValue) appointment.PropertyId = request.PropertyId.Value;
+        if (request.ClientId.HasValue) appointment.ClientId = request.ClientId.Value;
         if (request.AppointmentDate != default) appointment.AppointmentDate = request.AppointmentDate;
         if (!string.IsNullOrEmpty(request.Time)) appointment.Time = request.Time;
         if (request.Type.HasValue) appointment.Type = request.Type;

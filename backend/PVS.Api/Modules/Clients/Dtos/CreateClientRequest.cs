@@ -12,4 +12,5 @@ public class CreateClientRequest
     public Address? Address { get; set; } 
     public ClientType? ClientType { get; set; }
     public ClientStatus? Status { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 }

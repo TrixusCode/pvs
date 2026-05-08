@@ -50,6 +50,8 @@ builder.Services.AddScoped<PVS.Api.Modules.Properties.Services.IPropertiesServic
 builder.Services.AddScoped<PVS.Api.Modules.Clients.Services.IClientService, PVS.Api.Modules.Clients.Services.ClientService>();
 builder.Services.AddScoped<PVS.Api.Modules.Appointments.Services.IAppointmentService, PVS.Api.Modules.Appointments.Services.AppointmentService>();
 builder.Services.AddScoped<PVS.Api.Modules.Offers.Services.IOfferService, PVS.Api.Modules.Offers.Services.OfferService>();
+builder.Services.AddScoped<PVS.Api.Modules.Employees.Services.IEmployeeService, PVS.Api.Modules.Employees.Services.EmployeeService>();
+builder.Services.AddScoped<PVS.Api.Modules.Employees.Repository.IEmployeeRepository, PVS.Api.Modules.Employees.Repository.EmployeeRepository>();
 builder.Services.AddScoped<PVS.Api.Modules.Dashboard.Services.IDashboardService, PVS.Api.Modules.Dashboard.Services.DashboardService>();
 
 // JWT Configuration
@@ -112,7 +114,18 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors("AllowFrontend");
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new { Success = false, Message = "An unexpected error occurred." });
+    });
+});
+
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 

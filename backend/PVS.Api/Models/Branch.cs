@@ -4,6 +4,8 @@ namespace PVS.Api.Models;
 
 public class Branch
 {
+    public const int MaxEmployees = 5;
+
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
@@ -11,7 +13,10 @@ public class Branch
     public string Phone { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string ManagerName { get; set; } = string.Empty;
-    public BranchStatus Status { get; set; } = BranchStatus.Active; 
+    public string? ImagePath { get; set; }
+    public List<Employee> Employees { get; set; } = new();
+    public string OperatingHours { get; set; } = string.Empty;
+    public BranchStatus Status { get; set; } = BranchStatus.Active;
     public int? ManagerUserId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

@@ -125,3 +125,4 @@
 /home/trixuscode/Desktop/pvs/backend/PVS.UnitTests/obj/Debug/net10.0/PVS.UnitTests.genruntimeconfig.cache
 /home/trixuscode/Desktop/pvs/backend/PVS.UnitTests/obj/Debug/net10.0/ref/PVS.UnitTests.dll
 /home/trixuscode/Desktop/pvs/backend/PVS.UnitTests/bin/Debug/net10.0/Microsoft.EntityFrameworkCore.InMemory.dll
+/home/trixuscode/Desktop/pvs/backend/PVS.UnitTests/bin/Debug/net10.0/PVS.Api.staticwebassets.runtime.json

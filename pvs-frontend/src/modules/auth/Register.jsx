@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthService from './AuthService';
+import ClientsService from '../clients/ClientsService';
 import './Login.css';
 
 export default function Register() {
@@ -10,7 +11,12 @@ export default function Register() {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    role: 'Agent'
+    phone: '',
+    clientType: 'Buyer',
+    dateOfBirth: '',
+    city: '',
+    state: '',
+    zipCode: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,28 +48,48 @@ export default function Register() {
     }
 
     try {
+      const role = formData.clientType === 'Buyer'
+        ? 'Client_Buyer'
+        : formData.clientType === 'Seller'
+          ? 'Client_Seller'
+          : 'Client_Both';
+
       const response = await AuthService.register(
         formData.email,
         formData.password,
         formData.firstName,
         formData.lastName,
-        formData.role
+        role
       );
 
-      // Store the token
-      localStorage.setItem('authToken', response.data.token);
+      const token = response.data.token;
+      localStorage.setItem('authToken', token);
 
-      // Store user info
-      if (response.data.user) {
-        localStorage.setItem('userRole', response.data.user.role || 'Agent');
-        localStorage.setItem('userId', response.data.user.id);
-        localStorage.setItem('userName', `${response.data.user.firstName} ${response.data.user.lastName}`);
+      const user = response.data.user;
+      if (user) {
+        localStorage.setItem('userRole', user.role || role);
+        localStorage.setItem('userId', user.id);
+        localStorage.setItem('userName', `${user.firstName} ${user.lastName}`);
       }
 
-      console.log('Registration successful, token stored');
-      // Redirect to dashboard
+      await ClientsService.create({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        clientType: formData.clientType,
+        status: 'Active',
+        address: {
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode
+        },
+        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null
+      });
+
       navigate('/dashboard');
     } catch (err) {
+      localStorage.removeItem('authToken');
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
@@ -114,17 +140,72 @@ export default function Register() {
           </div>
 
           <div className="form-group">
-            <label>Role:</label>
+            <label>Client Type:</label>
             <select
-              name="role"
-              value={formData.role}
+              name="clientType"
+              value={formData.clientType}
               onChange={handleChange}
               disabled={loading}
             >
-              <option value="Agent">Agent</option>
-              <option value="Manager">Manager</option>
-              <option value="Admin">Admin</option>
+              <option value="Buyer">Buyer</option>
+              <option value="Seller">Seller</option>
+              <option value="Both">Buyer & Seller</option>
             </select>
+          </div>
+
+          <div className="form-group">
+            <label>Phone:</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Date of Birth:</label>
+            <input
+              type="date"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={handleChange}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>City:</label>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>State:</label>
+            <input
+              type="text"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>ZIP Code:</label>
+            <input
+              type="text"
+              name="zipCode"
+              value={formData.zipCode}
+              onChange={handleChange}
+              disabled={loading}
+            />
           </div>
 
           <div className="form-group">

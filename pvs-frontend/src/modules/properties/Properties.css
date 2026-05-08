@@ -152,3 +152,53 @@
 .pagination span {
   color: var(--color-mid);
 }
+
+.property-table-image,
+.property-image-placeholder {
+  width: 72px;
+  height: 54px;
+  border-radius: 8px;
+}
+
+.property-table-image {
+  object-fit: cover;
+  border: 1px solid rgba(69, 80, 59, 0.12);
+}
+
+.property-image-placeholder {
+  display: grid;
+  place-items: center;
+  color: #6b7280;
+  background: #f3f4f6;
+  border: 1px solid rgba(69, 80, 59, 0.1);
+}
+
+.property-upload-row {
+  display: grid;
+  grid-template-columns: 1fr 132px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.property-upload-preview {
+  width: 132px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(69, 80, 59, 0.12);
+}
+
+.property-details-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(69, 80, 59, 0.12);
+}
+
+@media (max-width: 576px) {
+  .property-upload-row {
+    grid-template-columns: 1fr;
+  }
+}

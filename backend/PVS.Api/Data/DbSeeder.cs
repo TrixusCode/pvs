@@ -3,6 +3,7 @@ using PVS.Api.Models;
 using BCrypt.Net;
 using PVS.Api.Modules.Branches.Enums;
 using PVS.Api.Modules.Clients.Enums;
+using PVS.Api.Modules.Employees.Enums;
 
 namespace PVS.Api.Data;
 
@@ -119,10 +120,57 @@ public class DbSeeder
                 Bathrooms = 2,
                 SquareFeet = 2500,
                 UserId = agent.Id,
+                BranchId = mainBranch.Id,
                 CreatedAt = DateTime.UtcNow
             };
 
             context.Properties.Add(property);
+            await context.SaveChangesAsync();
+
+            // Create sample employees
+            var employee1Address = new Address
+            {
+                City = "New York",
+                State = "NY",
+                ZipCode = "10001"
+            };
+
+            var employee1 = new Employee
+            {
+                FirstName = "Sarah",
+                LastName = "Johnson",
+                PhoneNumber = "555-0300",
+                Birthdate = new DateTime(1985, 5, 15),
+                Role = EmployeeRole.Manager,
+                BranchId = mainBranch.Id,
+                UserId = admin.Id,
+                Address = employee1Address,
+                CreatedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
+            };
+
+            var employee2Address = new Address
+            {
+                City = "New York",
+                State = "NY",
+                ZipCode = "10001"
+            };
+
+            var employee2 = new Employee
+            {
+                FirstName = "Mike",
+                LastName = "Davis",
+                PhoneNumber = "555-0400",
+                Birthdate = new DateTime(1990, 3, 22),
+                Role = EmployeeRole.Agent,
+                BranchId = mainBranch.Id,
+                UserId = agent.Id,
+                Address = employee2Address,
+                CreatedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
+            };
+
+            context.Employees.AddRange(employee1, employee2);
             await context.SaveChangesAsync();
         }
         catch (Exception ex)

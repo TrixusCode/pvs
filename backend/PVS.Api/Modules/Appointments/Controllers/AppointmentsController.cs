@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PVS.Api.Common;
 using PVS.Api.Modules.Appointments.Dtos;
+using PVS.Api.Modules.Appointments.Enums;
 using PVS.Api.Modules.Appointments.Mappers;
 using PVS.Api.Modules.Appointments.Services;
 using System.Security.Claims;
@@ -49,6 +50,29 @@ public class AppointmentsController(IAppointmentService appointmentService) : Co
         {
             Success = true,
             Data = appointment.ToDto()
+        });
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] string? query)
+    {
+        var userId = GetCurrentUserId();
+        var appointments = await appointmentService.GetAllByUserAsync(userId);
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var normalizedQuery = query.Trim();
+            appointments = appointments.Where(appointment =>
+                appointment.PropertyId.ToString().Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase) ||
+                appointment.ClientId.ToString().Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase) ||
+                appointment.Notes.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase) ||
+                appointment.Time.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return Ok(new ApiResponse<List<AppointmentDto>>
+        {
+            Success = true,
+            Data = appointments.Select(appointment => appointment.ToDto()).ToList()
         });
     }
 
@@ -139,7 +163,83 @@ public class AppointmentsController(IAppointmentService appointmentService) : Co
             Data = appointments.Select(appointment => appointment.ToDto()).ToList()
         });
     }
-}
 
+    [HttpGet("by-status/{status}")]
+    public async Task<IActionResult> GetByStatus(AppointmentStatus status)
+    {
+        var userId = GetCurrentUserId();
+        var appointments = await appointmentService.GetAllByUserAsync(userId);
+
+        return Ok(new ApiResponse<List<AppointmentDto>>
+        {
+            Success = true,
+            Data = appointments
+                .Where(appointment => appointment.Status == status)
+                .Select(appointment => appointment.ToDto())
+                .ToList()
+        });
+    }
+
+    [HttpGet("upcoming")]
+    public async Task<IActionResult> GetUpcoming([FromQuery] int limit = 10)
+    {
+        var userId = GetCurrentUserId();
+        var today = DateTime.UtcNow.Date;
+        var appointments = await appointmentService.GetAllByUserAsync(userId);
+
+        return Ok(new ApiResponse<List<AppointmentDto>>
+        {
+            Success = true,
+            Data = appointments
+                .Where(appointment => appointment.AppointmentDate.Date >= today && appointment.Status == AppointmentStatus.Scheduled)
+                .OrderBy(appointment => appointment.AppointmentDate)
+                .ThenBy(appointment => appointment.Time)
+                .Take(limit)
+                .Select(appointment => appointment.ToDto())
+                .ToList()
+        });
+    }
+
+    [HttpGet("today")]
+    public async Task<IActionResult> GetToday()
+    {
+        var userId = GetCurrentUserId();
+        var today = DateTime.UtcNow.Date;
+        var appointments = await appointmentService.GetAllByUserAsync(userId);
+
+        return Ok(new ApiResponse<List<AppointmentDto>>
+        {
+            Success = true,
+            Data = appointments
+                .Where(appointment => appointment.AppointmentDate.Date == today)
+                .OrderBy(appointment => appointment.Time)
+                .Select(appointment => appointment.ToDto())
+                .ToList()
+        });
+    }
+
+    [HttpPost("{id}/confirm")]
+    public async Task<IActionResult> Confirm(int id)
+    {
+        return await UpdateStatus(id, new UpdateAppointmentStatusRequest { Status = AppointmentStatus.Scheduled });
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateAppointmentStatusRequest request)
+    {
+        var userId = GetCurrentUserId();
+        var appointment = await appointmentService.UpdateAsync(id, new UpdateAppointmentRequest { Status = request.Status }, userId);
+
+        if (appointment == null)
+            return NotFound(new ApiResponse { Success = false, Message = "Appointment not found" });
+
+        return Ok(new ApiResponse<AppointmentDto>
+        {
+            Success = true,
+            Message = "Appointment status updated successfully",
+            Data = appointment.ToDto()
+        });
+    }
+}
 
 

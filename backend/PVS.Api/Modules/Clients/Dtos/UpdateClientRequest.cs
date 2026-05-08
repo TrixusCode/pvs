@@ -13,4 +13,5 @@ public class UpdateClientRequest
 
     public ClientType? ClientType { get; set; }
     public ClientStatus? Status { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 }

@@ -18,6 +18,7 @@ public static class BranchMapper
             Email = branch.Email,
             ManagerName = branch.ManagerName,
             Status = branch.Status,
+            EmployeeCount = branch.Employees?.Count ?? 0,
             ManagerUserId = branch.ManagerUserId,
             CreatedAt = branch.CreatedAt,
             UpdatedAt = branch.UpdatedAt

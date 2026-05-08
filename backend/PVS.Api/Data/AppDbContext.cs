@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<Offer> Offers { get; set; } = null!;
     public DbSet<Branch> Branches { get; set; } = null!;
     public DbSet<Address> Addresses { get; set; } = null!;
+    public DbSet<Employee> Employees { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -97,6 +98,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Price).IsRequired().HasPrecision(18, 2);
             entity.Property(e => e.SquareFeet).HasPrecision(10, 2);
             entity.Property(e => e.PropertyType).IsRequired();
+            entity.Property(e => e.ImagePath).HasMaxLength(500);
             
             // Foreign key to User
             entity.HasOne<User>()
@@ -108,6 +110,40 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Address)
                 .WithMany()
                 .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.Branch)
+                .WithMany()
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Employee configuration
+        modelBuilder.Entity<Employee>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.Role).IsRequired();
+            entity.Property(e => e.ImagePath).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Address)
+                .WithMany()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Branch)
+                .WithMany(b => b.Employees)
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.UserId).IsUnique();
         });
 
         // Appointment configuration

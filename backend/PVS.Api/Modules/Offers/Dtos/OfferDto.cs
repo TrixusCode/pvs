@@ -10,7 +10,7 @@ public class OfferDto
     public string? Status { get; set; }
     public DateTime OfferDate { get; set; }
     public DateTime? ExpirationDate { get; set; }
-    public string OfferType { get; set; }
+    public string OfferType { get; set; } = string.Empty;
     public decimal? DownPaymentPercent { get; set; }
     public int? ClosingDaysRequested { get; set; }
     public string? Contingencies { get; set; }

@@ -13,6 +13,7 @@ public class BranchDto
     public string Email { get; set; } = string.Empty;
     public string ManagerName { get; set; } = string.Empty;
     public BranchStatus Status { get; set; }
+    public int EmployeeCount { get; set; }
     public int? ManagerUserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

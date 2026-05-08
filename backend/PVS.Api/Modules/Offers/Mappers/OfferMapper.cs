@@ -50,10 +50,13 @@ public static class OfferMapper
 
     public static void ApplyTo(this UpdateOfferRequest request, Offer offer)
     {
+        if (request.PropertyId.HasValue) offer.PropertyId = request.PropertyId.Value;
+        if (request.ClientId.HasValue) offer.ClientId = request.ClientId.Value;
         if (request.OfferedPrice > 0) offer.OfferedPrice = request.OfferedPrice;
         if (!string.IsNullOrEmpty(request.Status) && Enum.TryParse<OfferStatus>(request.Status, out var status)) 
             offer.Status = status;
         if (request.ExpirationDate.HasValue) offer.ExpirationDate = request.ExpirationDate;
+        if (request.OfferType.HasValue) offer.OfferType = request.OfferType.Value;
         if (request.DownPaymentPercent.HasValue) offer.DownPaymentPercent = request.DownPaymentPercent;
         if (request.ClosingDaysRequested.HasValue) offer.ClosingDaysRequested = request.ClosingDaysRequested;
         if (!string.IsNullOrEmpty(request.Contingencies) && Enum.TryParse<Contingencies>(request.Contingencies, out var contingencies)) 

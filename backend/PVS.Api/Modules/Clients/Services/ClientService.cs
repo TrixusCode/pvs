@@ -2,6 +2,7 @@ using PVS.Api.Data;
 using PVS.Api.Models;
 using PVS.Api.Modules.Clients.Dtos;
 using PVS.Api.Modules.Clients.Mappers;
+using Microsoft.EntityFrameworkCore;
 
 namespace PVS.Api.Modules.Clients.Services;
 
@@ -10,6 +11,7 @@ public class ClientService(AppDbContext context) : IClientService
     public async Task<IEnumerable<Client>> GetAllAsync(int userId)
     {
         return await Task.FromResult(context.Clients
+            .Include(c => c.Address)
             .Where(c => c.UserId == userId)
             .OrderByDescending(c => c.CreatedAt)
             .ToList());
@@ -18,6 +20,7 @@ public class ClientService(AppDbContext context) : IClientService
     public async Task<Client?> GetByIdAsync(int id, int userId)
     {
         return await Task.FromResult(context.Clients
+            .Include(c => c.Address)
             .FirstOrDefault(c => c.Id == id && c.UserId == userId));
     }
 

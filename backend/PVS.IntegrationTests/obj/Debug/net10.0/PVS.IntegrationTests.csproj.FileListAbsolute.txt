@@ -437,3 +437,4 @@
 /home/trixuscode/Desktop/pvs/backend/PVS.IntegrationTests/obj/Debug/net10.0/PVS.IntegrationTests.pdb
 /home/trixuscode/Desktop/pvs/backend/PVS.IntegrationTests/obj/Debug/net10.0/PVS.IntegrationTests.genruntimeconfig.cache
 /home/trixuscode/Desktop/pvs/backend/PVS.IntegrationTests/obj/Debug/net10.0/ref/PVS.IntegrationTests.dll
+/home/trixuscode/Desktop/pvs/backend/PVS.IntegrationTests/bin/Debug/net10.0/PVS.Api.staticwebassets.runtime.json

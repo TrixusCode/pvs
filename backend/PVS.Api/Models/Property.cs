@@ -14,6 +14,9 @@ public class Property
     public int Bathrooms { get; set; }
     public decimal SquareFeet { get; set; }
     public int UserId { get; set; }
+    public string? ImagePath { get; set; }
+    public int BranchId { get; set; }
+    public Branch Branch { get; set; } = null!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 }

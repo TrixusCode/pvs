@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Table, Badge, Card, Form, Alert, Pagination } from 'react-bootstrap';
-import { FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
+import { Container, Row, Col, Button, Table, Badge, Card, Form, Alert, Pagination, ButtonGroup } from 'react-bootstrap';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaCalendarDay, FaClock, FaCheck, FaTimes } from 'react-icons/fa';
 import AppointmentsService from './AppointmentsService';
+import ClientsService from '../clients/ClientsService';
+import PropertiesService from '../properties/PropertiesService';
 import FormModal from '../../shared/FormModal';
 import './Appointments.css';
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -16,6 +20,16 @@ export default function Appointments() {
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const getPropertyName = (propertyId) => {
+    const property = properties.find(item => item.id === Number(propertyId));
+    return property ? property.title : 'Unknown property';
+  };
+
+  const getClientName = (clientId) => {
+    const client = clients.find(item => item.id === Number(clientId));
+    return client ? `${client.firstName} ${client.lastName}` : 'Unknown client';
+  };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -30,7 +44,22 @@ export default function Appointments() {
 
   useEffect(() => {
     fetchAppointments();
+    fetchLookupData();
   }, [page]);
+
+  const fetchLookupData = async () => {
+    try {
+      const [clientsResponse, propertiesResponse] = await Promise.all([
+        ClientsService.getAll(1, 1000),
+        PropertiesService.getAll(1, 1000)
+      ]);
+
+      setClients(clientsResponse.data || []);
+      setProperties(propertiesResponse.data || []);
+    } catch (err) {
+      console.error('Error loading appointment lookup data:', err);
+    }
+  };
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -121,6 +150,30 @@ export default function Appointments() {
     }
   };
 
+  const handleQuickFilter = async (filter) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      let response;
+      if (filter === 'today') {
+        response = await AppointmentsService.getToday();
+      } else if (filter === 'upcoming') {
+        response = await AppointmentsService.getUpcoming(25);
+      } else {
+        response = await AppointmentsService.getByStatus(filter);
+      }
+
+      setAppointments(response.data || []);
+      setTotalPages(1);
+      setPage(1);
+    } catch (err) {
+      setError(err.message || 'Failed to filter appointments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setError('');
     setSuccess('');
@@ -130,7 +183,8 @@ export default function Appointments() {
       const data = {
         ...formData,
         propertyId: parseInt(formData.propertyId),
-        clientId: parseInt(formData.clientId)
+        clientId: parseInt(formData.clientId),
+        appointmentDate: formData.appointmentDate ? new Date(formData.appointmentDate).toISOString() : null
       };
 
       if (editingAppointment) {
@@ -202,20 +256,30 @@ export default function Appointments() {
         <Card.Body>
           <Form onSubmit={handleSearch}>
             <Row>
-              <Col md={9}>
+              <Col md={7}>
                 <Form.Group>
                   <Form.Control
                     type="text"
-                    placeholder="Search appointments by property ID, client ID, or notes..."
+                    placeholder="Search appointments by property, client, or notes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </Form.Group>
               </Col>
-              <Col md={3}>
+              <Col md={2}>
                 <Button variant="primary" type="submit" className="w-100">
                   <FaSearch className="me-2" /> Search
                 </Button>
+              </Col>
+              <Col md={3}>
+                <ButtonGroup className="w-100 appointment-filter-group">
+                  <Button variant="outline-secondary" onClick={() => handleQuickFilter('today')}>
+                    <FaCalendarDay className="me-1" /> Today
+                  </Button>
+                  <Button variant="outline-secondary" onClick={() => handleQuickFilter('upcoming')}>
+                    <FaClock className="me-1" /> Upcoming
+                  </Button>
+                </ButtonGroup>
               </Col>
             </Row>
           </Form>
@@ -243,8 +307,8 @@ export default function Appointments() {
                     <tr>
                       <th>Date & Time</th>
                       <th>Type</th>
-                      <th>Property ID</th>
-                      <th>Client ID</th>
+                      <th>Property</th>
+                      <th>Client</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
@@ -256,8 +320,8 @@ export default function Appointments() {
                           {formatDateTime(appointment.appointmentDate, appointment.time)}
                         </td>
                         <td>{getTypeBadge(appointment.type)}</td>
-                        <td>{appointment.propertyId}</td>
-                        <td>{appointment.clientId}</td>
+                        <td>{getPropertyName(appointment.propertyId)}</td>
+                        <td>{getClientName(appointment.clientId)}</td>
                         <td>{getStatusBadge(appointment.status)}</td>
                         <td>
                           <Button
@@ -268,6 +332,26 @@ export default function Appointments() {
                           >
                             <FaEdit /> Edit
                           </Button>
+                          {appointment.status === 'Scheduled' && (
+                            <>
+                              <Button
+                                variant="outline-success"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handleStatusChange(appointment.id, 'Completed')}
+                              >
+                                <FaCheck /> Complete
+                              </Button>
+                              <Button
+                                variant="outline-warning"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handleStatusChange(appointment.id, 'Cancelled')}
+                              >
+                                <FaTimes /> Cancel
+                              </Button>
+                            </>
+                          )}
                           <Form.Select
                             size="sm"
                             className="d-inline-block me-2"
@@ -412,28 +496,38 @@ export default function Appointments() {
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>Property ID</Form.Label>
-                <Form.Control
-                  type="number"
+                <Form.Label>Property</Form.Label>
+                <Form.Select
                   name="propertyId"
                   value={formData.propertyId}
                   onChange={handleInputChange}
-                  placeholder="Enter property ID"
                   required
-                />
+                >
+                  <option value="">Select property</option>
+                  {properties.map(property => (
+                    <option key={property.id} value={property.id}>
+                      {property.title}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>Client ID</Form.Label>
-                <Form.Control
-                  type="number"
+                <Form.Label>Client</Form.Label>
+                <Form.Select
                   name="clientId"
                   value={formData.clientId}
                   onChange={handleInputChange}
-                  placeholder="Enter client ID"
                   required
-                />
+                >
+                  <option value="">Select client</option>
+                  {clients.map(client => (
+                    <option key={client.id} value={client.id}>
+                      {client.firstName} {client.lastName}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
           </Row>

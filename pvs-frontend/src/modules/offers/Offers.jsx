@@ -1,21 +1,46 @@
 import { useState, useEffect } from 'react';
+import { useUserRole } from '../../shared/RoleGuard';
 import { Container, Row, Col, Button, Table, Badge, Card, Form, Alert, Pagination } from 'react-bootstrap';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaCheck, FaTimes, FaUndo } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaCheck, FaTimes, FaUndo, FaEye } from 'react-icons/fa';
 import OffersService from './OffersService';
+import ClientsService from '../clients/ClientsService';
+import PropertiesService from '../properties/PropertiesService';
 import FormModal from '../../shared/FormModal';
+import DetailsModal from '../../shared/DetailsModal';
 import './Offers.css';
 
 export default function Offers() {
   const [offers, setOffers] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showModal, setShowModal] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState(null);
   const [editingOffer, setEditingOffer] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const offerTypeOptions = [
+    { value: 'FullPrice', label: 'Full Price' },
+    { value: 'Contingent', label: 'Contingent' },
+    { value: 'AsIs', label: 'As-Is' }
+  ];
+
+  const contingencyOptions = [
+    { value: 'None', label: 'None' },
+    { value: 'HomeInspection', label: 'Home Inspection' },
+    { value: 'Appraisal', label: 'Appraisal' },
+    { value: 'Financing', label: 'Financing' }
+  ];
+
+  const userRole = useUserRole();
+  const canManageOffers = ['Admin', 'Manager', 'Agent'].includes(userRole);
+  const canCreateOffers = ['Admin', 'Manager', 'Agent', 'Client_Buyer', 'Client_Seller'].includes(userRole);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -24,12 +49,40 @@ export default function Offers() {
     offeredPrice: '',
     offerType: 'FullPrice',
     expirationDate: '',
-    conditions: ''
+    agentNotes: '',
+    downPaymentPercent: '',
+    closingDaysRequested: '',
+    contingencies: 'None'
   });
 
   useEffect(() => {
     fetchOffers();
+    fetchLookupData();
   }, [page]);
+
+  const fetchLookupData = async () => {
+    try {
+      const [clientsResponse, propertiesResponse] = await Promise.all([
+        ClientsService.getAll(1, 1000),
+        PropertiesService.getAll(1, 1000)
+      ]);
+
+      setClients(clientsResponse.data || []);
+      setProperties(propertiesResponse.data || []);
+    } catch (err) {
+      console.error('Error loading offer lookup data:', err);
+    }
+  };
+
+  const getPropertyName = (propertyId) => {
+    const property = properties.find(item => item.id === Number(propertyId));
+    return property ? property.title : 'Unknown property';
+  };
+
+  const getClientName = (clientId) => {
+    const client = clients.find(item => item.id === Number(clientId));
+    return client ? `${client.firstName} ${client.lastName}` : 'Unknown client';
+  };
 
   const fetchOffers = async () => {
     setLoading(true);
@@ -68,6 +121,8 @@ export default function Offers() {
     }
   };
 
+  const getCurrentUserId = () => parseInt(localStorage.getItem('userId')) || 0;
+
   const handleCreate = () => {
     setEditingOffer(null);
     setFormData({
@@ -76,7 +131,10 @@ export default function Offers() {
       offeredPrice: '',
       offerType: 'FullPrice',
       expirationDate: '',
-      conditions: ''
+      agentNotes: '',
+      downPaymentPercent: '',
+      closingDaysRequested: '',
+      contingencies: 'None'
     });
     setShowModal(true);
   };
@@ -89,9 +147,22 @@ export default function Offers() {
       offeredPrice: offer.offeredPrice || '',
       offerType: offer.offerType || 'FullPrice',
       expirationDate: offer.expirationDate ? new Date(offer.expirationDate).toISOString().split('T')[0] : '',
-      conditions: offer.conditions || ''
+      agentNotes: offer.agentNotes || '',
+      downPaymentPercent: offer.downPaymentPercent || '',
+      closingDaysRequested: offer.closingDaysRequested || '',
+      contingencies: offer.contingencies || 'None'
     });
     setShowModal(true);
+  };
+
+  const handleViewDetails = (offer) => {
+    setSelectedOffer(offer);
+    setShowDetails(true);
+  };
+
+  const handleCloseDetails = () => {
+    setShowDetails(false);
+    setSelectedOffer(null);
   };
 
   const handleDelete = async (id) => {
@@ -134,22 +205,26 @@ export default function Offers() {
 
     try {
       const data = {
-        ...formData,
-        propertyId: parseInt(formData.propertyId),
-        clientId: parseInt(formData.clientId),
-        offeredPrice: parseFloat(formData.offeredPrice)
+        propertyId: parseInt(formData.propertyId, 10),
+        clientId: parseInt(formData.clientId, 10),
+        offeredPrice: parseFloat(formData.offeredPrice),
+        offerType: formData.offerType,
+        expirationDate: formData.expirationDate ? new Date(formData.expirationDate).toISOString() : null,
+        agentNotes: formData.agentNotes,
+        downPaymentPercent: formData.downPaymentPercent ? parseFloat(formData.downPaymentPercent) : null,
+        closingDaysRequested: formData.closingDaysRequested ? parseInt(formData.closingDaysRequested, 10) : null,
+        contingencies: formData.contingencies || 'None'
       };
 
       if (editingOffer) {
         await OffersService.update(editingOffer.id, data);
         setSuccess('Offer updated successfully');
-        fetchOffers();
       } else {
         await OffersService.create(data);
         setSuccess('Offer created successfully');
-        fetchOffers();
       }
 
+      fetchOffers();
       setShowModal(false);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -192,6 +267,10 @@ export default function Offers() {
     return <Badge bg={variants[offerType] || 'secondary'}>{labels[offerType] || offerType}</Badge>;
   };
 
+  const getContingencyLabel = (contingency) => (
+    contingencyOptions.find(option => option.value === contingency)?.label || contingency || 'None'
+  );
+
   const formatExpirationDate = (date) => {
     if (!date) return 'No expiration';
     return new Date(date).toLocaleDateString();
@@ -202,9 +281,11 @@ export default function Offers() {
       {/* Page Header */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4">
         <h1>Offers</h1>
-        <Button variant="primary" onClick={handleCreate}>
-          <FaPlus className="me-2" /> Create Offer
-        </Button>
+        {canCreateOffers && (
+          <Button variant="primary" onClick={handleCreate}>
+            <FaPlus className="me-2" /> Create Offer
+          </Button>
+        )}
       </div>
 
       {/* Alerts */}
@@ -220,7 +301,7 @@ export default function Offers() {
                 <Form.Group>
                   <Form.Control
                     type="text"
-                    placeholder="Search offers by property ID, client ID, or offer amount..."
+                    placeholder="Search offers by property, client, or offer amount..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -257,8 +338,8 @@ export default function Offers() {
                     <tr>
                       <th>Offer Amount</th>
                       <th>Type</th>
-                      <th>Property ID</th>
-                      <th>Client ID</th>
+                      <th>Property</th>
+                      <th>Client</th>
                       <th>Status</th>
                       <th>Expiration</th>
                       <th>Actions</th>
@@ -269,46 +350,58 @@ export default function Offers() {
                       <tr key={offer.id}>
                         <td className="fw-bold text-success">${offer.offeredPrice?.toLocaleString()}</td>
                         <td>{getOfferTypeBadge(offer.offerType)}</td>
-                        <td>{offer.propertyId}</td>
-                        <td>{offer.clientId}</td>
+                        <td>{getPropertyName(offer.propertyId)}</td>
+                        <td>{getClientName(offer.clientId)}</td>
                         <td>{getStatusBadge(offer.status)}</td>
                         <td>{formatExpirationDate(offer.expirationDate)}</td>
                         <td>
                           <Button
-                            variant="outline-primary"
+                            variant="outline-secondary"
                             size="sm"
                             className="me-1"
-                            onClick={() => handleEdit(offer)}
+                            onClick={() => handleViewDetails(offer)}
                           >
-                            <FaEdit /> Edit
+                            <FaEye />
                           </Button>
-                          {offer.status === 'Pending' && (
+                          {canManageOffers && (
                             <>
                               <Button
-                                variant="outline-success"
+                                variant="outline-primary"
                                 size="sm"
                                 className="me-1"
-                                onClick={() => handleStatusChange(offer.id, 'accept')}
+                                onClick={() => handleEdit(offer)}
                               >
-                                <FaCheck /> Accept
+                                <FaEdit /> Edit
                               </Button>
+                              {offer.status === 'Pending' && (
+                                <>
+                                  <Button
+                                    variant="outline-success"
+                                    size="sm"
+                                    className="me-1"
+                                    onClick={() => handleStatusChange(offer.id, 'accept')}
+                                  >
+                                    <FaCheck /> Accept
+                                  </Button>
+                                  <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    className="me-1"
+                                    onClick={() => handleStatusChange(offer.id, 'reject')}
+                                  >
+                                    <FaTimes /> Reject
+                                  </Button>
+                                </>
+                              )}
                               <Button
                                 variant="outline-danger"
                                 size="sm"
-                                className="me-1"
-                                onClick={() => handleStatusChange(offer.id, 'reject')}
+                                onClick={() => handleDelete(offer.id)}
                               >
-                                <FaTimes /> Reject
+                                <FaTrash /> Delete
                               </Button>
                             </>
                           )}
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => handleDelete(offer.id)}
-                          >
-                            <FaTrash /> Delete
-                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -371,28 +464,36 @@ export default function Offers() {
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>Property ID</Form.Label>
-                <Form.Control
-                  type="number"
+                <Form.Label>Property</Form.Label>
+                <Form.Select
                   name="propertyId"
                   value={formData.propertyId}
                   onChange={handleInputChange}
-                  placeholder="Enter property ID"
                   required
-                />
+                >
+                  <option value="">Select property</option>
+                  {properties.map(property => (
+                    <option key={property.id} value={property.id}>{property.title}</option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>Client ID</Form.Label>
-                <Form.Control
-                  type="number"
+                <Form.Label>Client</Form.Label>
+                <Form.Select
                   name="clientId"
                   value={formData.clientId}
                   onChange={handleInputChange}
-                  placeholder="Enter client ID"
                   required
-                />
+                >
+                  <option value="">Select client</option>
+                  {clients.map(client => (
+                    <option key={client.id} value={client.id}>
+                      {client.firstName} {client.lastName}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
           </Row>
@@ -420,9 +521,9 @@ export default function Offers() {
                   value={formData.offerType}
                   onChange={handleInputChange}
                 >
-                  <option value="FullPrice">Full Price</option>
-                  <option value="Contingent">Contingent</option>
-                  <option value="AsIs">As-Is</option>
+                  {offerTypeOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </Form.Select>
               </Form.Group>
             </Col>
@@ -438,19 +539,106 @@ export default function Offers() {
             />
           </Form.Group>
 
+          <Row>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Down Payment %</Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  name="downPaymentPercent"
+                  value={formData.downPaymentPercent}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 20"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Closing Days</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="closingDaysRequested"
+                  value={formData.closingDaysRequested}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 30"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Contingencies</Form.Label>
+                <Form.Select
+                  name="contingencies"
+                  value={formData.contingencies}
+                  onChange={handleInputChange}
+                >
+                  {contingencyOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+
           <Form.Group className="mb-3">
-            <Form.Label>Conditions</Form.Label>
+            <Form.Label>Agent Notes</Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
-              name="conditions"
-              value={formData.conditions}
+              name="agentNotes"
+              value={formData.agentNotes}
               onChange={handleInputChange}
-              placeholder="Special conditions or contingencies..."
+              placeholder="Notes from the agent..."
             />
           </Form.Group>
         </Form>
       </FormModal>
+
+      <DetailsModal
+        show={showDetails}
+        title="Offer Details"
+        onClose={handleCloseDetails}
+        footer={null}
+      >
+        {selectedOffer ? (
+          <div>
+            <h5>{getPropertyName(selectedOffer.propertyId)}</h5>
+            <p className="text-muted mb-3">Client: {getClientName(selectedOffer.clientId)}</p>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <strong>Offer Amount:</strong> ${selectedOffer.offeredPrice?.toLocaleString()}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Status:</strong> {getStatusBadge(selectedOffer.status)}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Offer Type:</strong> {selectedOffer.offerType}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Expiration:</strong> {formatExpirationDate(selectedOffer.expirationDate)}
+              </div>
+              <div className="col-md-12 mb-3">
+                <strong>Agent Notes:</strong> {selectedOffer.agentNotes || 'None'}
+              </div>
+              <div className="col-md-4 mb-3">
+                <strong>Down Payment %:</strong> {selectedOffer.downPaymentPercent ?? 'N/A'}
+              </div>
+              <div className="col-md-4 mb-3">
+                <strong>Closing Days:</strong> {selectedOffer.closingDaysRequested ?? 'N/A'}
+              </div>
+              <div className="col-md-4 mb-3">
+                <strong>Contingencies:</strong> {getContingencyLabel(selectedOffer.contingencies)}
+              </div>
+              <div className="col-md-12 mb-3">
+                <strong>Created At:</strong> {selectedOffer.createdAt ? new Date(selectedOffer.createdAt).toLocaleDateString() : 'N/A'}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p>No details available.</p>
+        )}
+      </DetailsModal>
     </Container>
   );
 }

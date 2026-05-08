@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useUserRole } from '../../shared/RoleGuard';
 import { Container, Row, Col, Button, Table, Badge, Card, Form, Alert, Pagination } from 'react-bootstrap';
-import { FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaEye } from 'react-icons/fa';
 import ClientsService from './ClientsService';
 import FormModal from '../../shared/FormModal';
+import DetailsModal from '../../shared/DetailsModal';
 import './Clients.css';
 
 export default function Clients() {
@@ -13,9 +15,14 @@ export default function Clients() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showModal, setShowModal] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
   const [editingClient, setEditingClient] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const userRole = useUserRole();
+  const canManageClients = ['Admin', 'Manager', 'Agent'].includes(userRole);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -24,7 +31,11 @@ export default function Clients() {
     email: '',
     phone: '',
     clientType: 'Buyer',
-    status: 'Active'
+    status: 'Active',
+    city: '',
+    state: '',
+    zipCode: '',
+    dateOfBirth: ''
   });
 
   useEffect(() => {
@@ -68,6 +79,8 @@ export default function Clients() {
     }
   };
 
+  const getCurrentUserId = () => parseInt(localStorage.getItem('userId')) || 0;
+
   const handleCreate = () => {
     setEditingClient(null);
     setFormData({
@@ -76,7 +89,11 @@ export default function Clients() {
       email: '',
       phone: '',
       clientType: 'Buyer',
-      status: 'Active'
+      status: 'Active',
+      city: '',
+      state: '',
+      zipCode: '',
+      dateOfBirth: ''
     });
     setShowModal(true);
   };
@@ -89,9 +106,23 @@ export default function Clients() {
       email: client.email || '',
       phone: client.phone || '',
       clientType: client.clientType || 'Buyer',
-      status: client.status || 'Active'
+      status: client.status || 'Active',
+      city: client.address?.city || '',
+      state: client.address?.state || '',
+      zipCode: client.address?.zipCode || '',
+      dateOfBirth: client.dateOfBirth ? new Date(client.dateOfBirth).toISOString().split('T')[0] : ''
     });
     setShowModal(true);
+  };
+
+  const handleViewDetails = (client) => {
+    setSelectedClient(client);
+    setShowDetails(true);
+  };
+
+  const handleCloseDetails = () => {
+    setShowDetails(false);
+    setSelectedClient(null);
   };
 
   const handleDelete = async (id) => {
@@ -113,16 +144,31 @@ export default function Clients() {
     setSubmitting(true);
 
     try {
+      const data = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        clientType: formData.clientType,
+        status: formData.status,
+        address: {
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode
+        },
+        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
+        userId: getCurrentUserId()
+      };
+
       if (editingClient) {
-        await ClientsService.update(editingClient.id, formData);
+        await ClientsService.update(editingClient.id, data);
         setSuccess('Client updated successfully');
-        fetchClients();
       } else {
-        await ClientsService.create(formData);
+        await ClientsService.create(data);
         setSuccess('Client created successfully');
-        fetchClients();
       }
 
+      fetchClients();
       setShowModal(false);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -163,9 +209,11 @@ export default function Clients() {
       {/* Page Header */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4">
         <h1>Clients</h1>
-        <Button variant="primary" onClick={handleCreate}>
-          <FaPlus className="me-2" /> Add Client
-        </Button>
+        {canManageClients && (
+          <Button variant="primary" onClick={handleCreate}>
+            <FaPlus className="me-2" /> Add Client
+          </Button>
+        )}
       </div>
 
       {/* Alerts */}
@@ -234,20 +282,32 @@ export default function Clients() {
                         <td>{getStatusBadge(client.status)}</td>
                         <td>
                           <Button
-                            variant="outline-primary"
+                            variant="outline-secondary"
                             size="sm"
                             className="me-2"
-                            onClick={() => handleEdit(client)}
+                            onClick={() => handleViewDetails(client)}
                           >
-                            <FaEdit /> Edit
+                            <FaEye />
                           </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => handleDelete(client.id)}
-                          >
-                            <FaTrash /> Delete
-                          </Button>
+                          {canManageClients && (
+                            <>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handleEdit(client)}
+                              >
+                                <FaEdit /> Edit
+                              </Button>
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => handleDelete(client.id)}
+                              >
+                                <FaTrash /> Delete
+                              </Button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -360,6 +420,56 @@ export default function Clients() {
           </Row>
 
           <Row>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Date of Birth</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>City</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>State</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>ZIP Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="zipCode"
+                  value={formData.zipCode}
+                  onChange={handleInputChange}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>Client Type</Form.Label>
@@ -391,6 +501,42 @@ export default function Clients() {
           </Row>
         </Form>
       </FormModal>
+
+      <DetailsModal
+        show={showDetails}
+        title="Client Details"
+        onClose={handleCloseDetails}
+        footer={null}
+      >
+        {selectedClient ? (
+          <div>
+            <h5>{selectedClient.firstName} {selectedClient.lastName}</h5>
+            <p className="text-muted mb-3">{selectedClient.email}</p>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <strong>Phone:</strong> {selectedClient.phone}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Type:</strong> {selectedClient.clientType}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Status:</strong> {getStatusBadge(selectedClient.status)}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>DOB:</strong> {selectedClient.dateOfBirth ? new Date(selectedClient.dateOfBirth).toLocaleDateString() : 'N/A'}
+              </div>
+              <div className="col-md-12 mb-3">
+                <strong>Address:</strong> {selectedClient.address?.city}, {selectedClient.address?.state} {selectedClient.address?.zipCode}
+              </div>
+              <div className="col-md-12 mb-3">
+                <strong>Created At:</strong> {selectedClient.createdAt ? new Date(selectedClient.createdAt).toLocaleDateString() : 'N/A'}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p>No details available.</p>
+        )}
+      </DetailsModal>
     </Container>
   );
 }

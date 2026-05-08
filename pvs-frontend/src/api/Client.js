@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API base URL - change based on environment
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5019/api';
 
 // Create axios instance
 const apiClient = axios.create({
@@ -29,7 +29,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
-      navigate("/login");
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

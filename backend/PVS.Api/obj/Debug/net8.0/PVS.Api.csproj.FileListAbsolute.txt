@@ -114,3 +114,4 @@
 /home/trixuscode/Desktop/pvs/backend/PVS.Api/obj/Debug/net8.0/PVS.Api.genruntimeconfig.cache
 /home/trixuscode/Desktop/pvs/backend/PVS.Api/obj/Debug/net8.0/ref/PVS.Api.dll
 /home/trixuscode/Desktop/pvs/backend/PVS.Api/bin/Debug/net8.0/Microsoft.Bcl.Memory.dll
+/home/trixuscode/Desktop/pvs/backend/PVS.Api/bin/Debug/net8.0/PVS.Api.staticwebassets.runtime.json

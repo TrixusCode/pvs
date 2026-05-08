@@ -1,21 +1,38 @@
 import { useState, useEffect } from 'react';
+import { useUserRole } from '../../shared/RoleGuard';
 import { Container, Row, Col, Button, Table, Badge, Card, Form, Alert, Pagination } from 'react-bootstrap';
-import { FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaEye, FaImage } from 'react-icons/fa';
 import PropertiesService from './PropertiesService';
+import BranchesService from '../branches/BranchesService';
 import FormModal from '../../shared/FormModal';
+import DetailsModal from '../../shared/DetailsModal';
 import './Properties.css';
 
 export default function Properties() {
+  const apiOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:5019/api').replace(/\/api\/?$/, '');
   const [properties, setProperties] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showModal, setShowModal] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
   const [editingProperty, setEditingProperty] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+
+  const getBranchName = (branchId) => {
+    const branch = branches.find(item => item.id === Number(branchId));
+    return branch ? branch.name : 'Unassigned';
+  };
+
+  const userRole = useUserRole();
+  const canManageProperties = ['Admin', 'Manager', 'Agent'].includes(userRole);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -24,18 +41,28 @@ export default function Properties() {
     price: '',
     bedrooms: '',
     bathrooms: '',
-    area: '',
-    address: '',
+    squareFeet: '',
     city: '',
     state: '',
     zipCode: '',
+    branchId: '',
     propertyType: 'House',
     status: 'Available'
   });
 
   useEffect(() => {
     fetchProperties();
+    fetchBranches();
   }, [page]);
+
+  const fetchBranches = async () => {
+    try {
+      const response = await BranchesService.getAll();
+      setBranches(response.data || []);
+    } catch (err) {
+      console.error('Error loading branches:', err);
+    }
+  };
 
   const fetchProperties = async () => {
     setLoading(true);
@@ -74,19 +101,23 @@ export default function Properties() {
     }
   };
 
+  const getCurrentUserId = () => parseInt(localStorage.getItem('userId')) || 0;
+
   const handleCreate = () => {
     setEditingProperty(null);
+    setImageFile(null);
+    setImagePreview('');
     setFormData({
       title: '',
       description: '',
       price: '',
       bedrooms: '',
       bathrooms: '',
-      area: '',
-      address: '',
+      squareFeet: '',
       city: '',
       state: '',
       zipCode: '',
+      branchId: '',
       propertyType: 'House',
       status: 'Available'
     });
@@ -95,21 +126,33 @@ export default function Properties() {
 
   const handleEdit = (property) => {
     setEditingProperty(property);
+    setImageFile(null);
+    setImagePreview(getImageUrl(property.imagePath));
     setFormData({
       title: property.title || '',
       description: property.description || '',
       price: property.price || '',
       bedrooms: property.bedrooms || '',
       bathrooms: property.bathrooms || '',
-      area: property.area || '',
-      address: property.address || '',
-      city: property.city || '',
-      state: property.state || '',
-      zipCode: property.zipCode || '',
+      squareFeet: property.squareFeet || '',
+      city: property.address?.city || '',
+      state: property.address?.state || '',
+      zipCode: property.address?.zipCode || '',
+      branchId: property.branchId || '',
       propertyType: property.propertyType || 'House',
       status: property.status || 'Available'
     });
     setShowModal(true);
+  };
+
+  const handleViewDetails = (property) => {
+    setSelectedProperty(property);
+    setShowDetails(true);
+  };
+
+  const handleCloseDetails = () => {
+    setShowDetails(false);
+    setSelectedProperty(null);
   };
 
   const handleDelete = async (id) => {
@@ -132,23 +175,36 @@ export default function Properties() {
 
     try {
       const data = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        branchId: parseInt(formData.branchId, 10) || 0,
+        propertyType: formData.propertyType,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
         price: parseFloat(formData.price),
-        bedrooms: parseInt(formData.bedrooms),
+        bedrooms: parseInt(formData.bedrooms, 10),
         bathrooms: parseFloat(formData.bathrooms),
-        area: parseFloat(formData.area)
+        squareFeet: parseFloat(formData.squareFeet)
       };
 
+      let savedPropertyId = editingProperty?.id;
+
       if (editingProperty) {
-        await PropertiesService.update(editingProperty.id, data);
+        const response = await PropertiesService.update(editingProperty.id, data);
+        savedPropertyId = response.data?.id || editingProperty.id;
         setSuccess('Property updated successfully');
-        fetchProperties();
       } else {
-        await PropertiesService.create(data);
+        const response = await PropertiesService.create(data);
+        savedPropertyId = response.data?.id;
         setSuccess('Property created successfully');
-        fetchProperties();
       }
 
+      if (imageFile && savedPropertyId) {
+        await PropertiesService.uploadImage(savedPropertyId, imageFile);
+      }
+
+      fetchProperties();
       setShowModal(false);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -166,6 +222,18 @@ export default function Properties() {
     }));
   };
 
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${apiOrigin}${imagePath}`;
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    setImageFile(file || null);
+    setImagePreview(file ? URL.createObjectURL(file) : getImageUrl(editingProperty?.imagePath));
+  };
+
   const getStatusBadge = (status) => {
     const variants = {
       'Available': 'success',
@@ -181,9 +249,11 @@ export default function Properties() {
       {/* Page Header */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4">
         <h1>Properties</h1>
-        <Button variant="primary" onClick={handleCreate}>
-          <FaPlus className="me-2" /> Add Property
-        </Button>
+        {canManageProperties && (
+          <Button variant="primary" onClick={handleCreate}>
+            <FaPlus className="me-2" /> Add Property
+          </Button>
+        )}
       </div>
 
       {/* Alerts */}
@@ -199,7 +269,7 @@ export default function Properties() {
                 <Form.Group>
                   <Form.Control
                     type="text"
-                    placeholder="Search properties by title, city, or ID..."
+                    placeholder="Search properties by title or city..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -234,6 +304,7 @@ export default function Properties() {
                 <Table hover>
                   <thead className="table-light">
                     <tr>
+                      <th>Photo</th>
                       <th>Title</th>
                       <th>Location</th>
                       <th>Price</th>
@@ -245,27 +316,52 @@ export default function Properties() {
                   <tbody>
                     {properties.map((property) => (
                       <tr key={property.id}>
+                        <td>
+                          {property.imagePath ? (
+                            <img
+                              src={getImageUrl(property.imagePath)}
+                              alt={property.title}
+                              className="property-table-image"
+                            />
+                          ) : (
+                            <div className="property-image-placeholder">
+                              <FaImage />
+                            </div>
+                          )}
+                        </td>
                         <td className="fw-bold">{property.title}</td>
-                        <td>{property.city}, {property.state} {property.zipCode}</td>
+                        <td>{property.address?.city}, {property.address?.state} {property.address?.zipCode}</td>
                         <td className="text-success fw-bold">${property.price?.toLocaleString()}</td>
-                        <td>{property.bedrooms} / {property.bathrooms}</td>
+                        <td>{property.bedrooms} / {property.bathrooms} / {property.squareFeet}</td>
                         <td>{getStatusBadge(property.status)}</td>
                         <td>
                           <Button
-                            variant="outline-primary"
+                            variant="outline-secondary"
                             size="sm"
                             className="me-2"
-                            onClick={() => handleEdit(property)}
+                            onClick={() => handleViewDetails(property)}
                           >
-                            <FaEdit /> Edit
+                            <FaEye />
                           </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => handleDelete(property.id)}
-                          >
-                            <FaTrash /> Delete
-                          </Button>
+                          {canManageProperties && (
+                            <>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handleEdit(property)}
+                              >
+                                <FaEdit /> Edit
+                              </Button>
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => handleDelete(property.id)}
+                              >
+                                <FaTrash /> Delete
+                              </Button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -407,27 +503,50 @@ export default function Properties() {
             </Col>
             <Col md={4}>
               <Form.Group className="mb-3">
-                <Form.Label>Area (sq ft)</Form.Label>
+                <Form.Label>Square Feet</Form.Label>
                 <Form.Control
                   type="number"
-                  name="area"
-                  value={formData.area}
+                  name="squareFeet"
+                  value={formData.squareFeet}
                   onChange={handleInputChange}
                 />
               </Form.Group>
             </Col>
           </Row>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Address</Form.Label>
-            <Form.Control
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              required
-            />
-          </Form.Group>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Branch</Form.Label>
+                <Form.Select
+                  name="branchId"
+                  value={formData.branchId}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Select branch</option>
+                  {branches.map(branch => (
+                    <option key={branch.id} value={branch.id}>{branch.name}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Status</Form.Label>
+                <Form.Select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                >
+                  <option value="Available">Available</option>
+                  <option value="Sold">Sold</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Off Market">Off Market</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
 
           <Row>
             <Col md={4}>
@@ -469,20 +588,77 @@ export default function Properties() {
           </Row>
 
           <Form.Group className="mb-3">
-            <Form.Label>Status</Form.Label>
-            <Form.Select
-              name="status"
-              value={formData.status}
-              onChange={handleInputChange}
-            >
-              <option value="Available">Available</option>
-              <option value="Sold">Sold</option>
-              <option value="Pending">Pending</option>
-              <option value="Off Market">Off Market</option>
-            </Form.Select>
+            <Form.Label>Property Image</Form.Label>
+            <div className="property-upload-row">
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Property preview"
+                  className="property-upload-preview"
+                />
+              )}
+            </div>
           </Form.Group>
         </Form>
       </FormModal>
+
+      <DetailsModal
+        show={showDetails}
+        title="Property Details"
+        onClose={handleCloseDetails}
+        footer={null}
+        size="lg"
+      >
+        {selectedProperty ? (
+          <div>
+            {selectedProperty.imagePath && (
+              <img
+                src={getImageUrl(selectedProperty.imagePath)}
+                alt={selectedProperty.title}
+                className="property-details-image"
+              />
+            )}
+            <h5>{selectedProperty.title}</h5>
+            <p className="text-muted mb-3">{selectedProperty.description}</p>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <strong>Price:</strong> ${selectedProperty.price?.toLocaleString()}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Status:</strong> {getStatusBadge(selectedProperty.status)}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Property Type:</strong> {selectedProperty.propertyType}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Branch:</strong> {getBranchName(selectedProperty.branchId)}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Bedrooms:</strong> {selectedProperty.bedrooms}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Bathrooms:</strong> {selectedProperty.bathrooms}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Square Feet:</strong> {selectedProperty.squareFeet}
+              </div>
+              <div className="col-md-6 mb-3">
+                <strong>Created At:</strong> {new Date(selectedProperty.createdAt).toLocaleDateString()}
+              </div>
+              <div className="col-md-12 mb-3">
+                <strong>Location:</strong> {selectedProperty.address?.city}, {selectedProperty.address?.state} {selectedProperty.address?.zipCode}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p>No details available.</p>
+        )}
+      </DetailsModal>
     </Container>
   );
 }

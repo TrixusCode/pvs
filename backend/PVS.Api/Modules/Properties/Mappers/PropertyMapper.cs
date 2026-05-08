@@ -21,6 +21,8 @@ public static class PropertyMapper
             Bedrooms = property.Bedrooms,
             Bathrooms = property.Bathrooms,
             SquareFeet = property.SquareFeet,
+            ImagePath = property.ImagePath,
+            BranchId = property.BranchId,
             UserId = property.UserId,
             CreatedAt = property.CreatedAt,
             UpdatedAt = property.UpdatedAt
@@ -32,6 +34,7 @@ public static class PropertyMapper
         return new Property
         {
             Title = request.Title,
+            PropertyType = request.PropertyType,
             Description = request.Description,
             Address = new Address
             {
@@ -43,6 +46,7 @@ public static class PropertyMapper
             Bedrooms = request.Bedrooms,
             Bathrooms = request.Bathrooms,
             SquareFeet = request.SquareFeet,
+            BranchId = request.BranchId,
             UserId = userId,
             CreatedAt = DateTime.UtcNow
         };
@@ -52,6 +56,8 @@ public static class PropertyMapper
     {
         if (request.Title != null) property.Title = request.Title;
         if (request.Description != null) property.Description = request.Description;
+        if (request.PropertyType.HasValue) property.PropertyType = request.PropertyType.Value;
+        if (request.BranchId.HasValue) property.BranchId = request.BranchId.Value;
         if (request.City != null) property.Address.City = request.City;
         if (request.State != null) property.Address.State = request.State;
         if (request.ZipCode != null) property.Address.ZipCode = request.ZipCode;

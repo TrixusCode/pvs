@@ -60,6 +60,30 @@ public class OffersController : ControllerBase
         });
     }
 
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] string? q)
+    {
+        var userId = GetCurrentUserId();
+        var offers = await _offerService.GetAllByUserAsync(userId);
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var query = q.Trim();
+            offers = offers.Where(offer =>
+                offer.Id.ToString().Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                offer.PropertyId.ToString().Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                offer.ClientId.ToString().Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                offer.OfferedPrice.ToString().Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                (offer.AgentNotes != null && offer.AgentNotes.Contains(query, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        return Ok(new ApiResponse<List<OfferDto>>
+        {
+            Success = true,
+            Data = offers.Select(offer => offer.ToDto()).ToList()
+        });
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateOfferRequest request)
     {
